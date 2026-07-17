@@ -1,0 +1,3394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aickoo - AI Code Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* VSCode-like theme */
+        :root {
+            --vscode-background: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-editor: #1e1e1e;
+            --vscode-tab: #2d2d30;
+            --vscode-active-tab: #1e1e1e;
+            --vscode-text: #cccccc;
+            --vscode-text-secondary: #858585;
+            --vscode-border: #3e3e42;
+            --vscode-accent: #27ae60;
+            --vscode-accent-hover: #219653;
+            --vscode-success: #4ec9b0;
+            --vscode-warning: #d7ba7d;
+            --vscode-error: #f48771;
+            --vscode-user-message: #1e7a4c;
+            --vscode-assistant-message: #2d2d30;
+            --vscode-scrollbar: #424242;
+            --vscode-scrollbar-hover: #4a4a4a;
+            --vscode-toolbar: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: var(--vscode-background);
+            color: var(--vscode-text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Top Toolbar */
+        .top-toolbar {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            background: var(--vscode-tab);
+            border-bottom: 1px solid var(--vscode-border);
+            gap: 4px;
+            flex-shrink: 0;
+            height: 32px;
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Activity Bar (Leftmost) */
+        .activity-bar {
+            width: 48px;
+            background: var(--vscode-sidebar);
+            border-right: 1px solid var(--vscode-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            flex-shrink: 0;
+        }
+
+        .activity-item {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--vscode-text-secondary);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .activity-item:hover {
+            color: var(--vscode-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .activity-item.active {
+            color: var(--vscode-text);
+        }
+
+        .activity-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--vscode-accent);
+        }
+
+        .activity-item i {
+            font-size: 18px;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Column: File Explorer */
+        .left-column {
+            width: 280px;
+            min-width: 200px;
+            background: var(--vscode-sidebar);
+            border-right: 1px solid var(--vscode-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        /* Center Column */
+        .center-column {
+            flex: 1;
+            min-width: 500px;
+            display: flex;
+            background: var(--vscode-editor);
+            overflow: hidden;
+        }
+
+        /* Right Column: AI Chat */
+        .right-column {
+            width: 350px;
+            min-width: 200px;
+            background: var(--vscode-sidebar);
+            border-left: 1px solid var(--vscode-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        /* Column Headers */
+        .column-header {
+            padding: 6px 16px;
+            background: var(--vscode-tab);
+            border-bottom: 1px solid var(--vscode-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 28px;
+        }
+
+        .column-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--vscode-text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .column-action {
+            background: none;
+            border: none;
+            color: var(--vscode-text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .column-action:hover {
+            color: var(--vscode-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Explorer */
+        .explorer-content {
+            flex: 1;
+            overflow: auto;
+            padding: 12px;
+        }
+
+        /* Sessions Sidebar */
+        .sessions-sidebar {
+            width: 250px;
+            background: var(--vscode-sidebar);
+            border-right: 1px solid var(--vscode-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sessions-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .session-item {
+            padding: 10px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+
+        .session-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .session-item.active {
+            background: rgba(0, 122, 204, 0.1);
+            border-color: var(--vscode-accent);
+        }
+
+        .new-session-btn {
+            margin: 12px;
+            padding: 10px;
+            background: var(--vscode-accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .new-session-btn:hover {
+            background: var(--vscode-accent-hover);
+        }
+
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Editor Tabs */
+        .editor-tabs {
+            display: flex;
+            background: var(--vscode-tab);
+            border-bottom: 1px solid var(--vscode-border);
+            overflow-x: auto;
+            height: 35px;
+        }
+
+        .editor-tab {
+            padding: 0 16px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border-right: 1px solid var(--vscode-border);
+            background: var(--vscode-tab);
+            color: var(--vscode-text-secondary);
+            font-size: 13px;
+            white-space: nowrap;
+            min-width: 120px;
+            transition: all 0.2s;
+        }
+
+        .editor-tab:hover {
+            color: var(--vscode-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .editor-tab.active {
+            background: var(--vscode-active-tab);
+            color: var(--vscode-text);
+        }
+
+        .tab-close {
+            margin-left: auto;
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--vscode-text-secondary);
+            cursor: pointer;
+        }
+
+        .editor-tab:hover .tab-close {
+            opacity: 0.7;
+        }
+
+        /* Editor Content */
+        .editor-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 40px;
+            text-align: center;
+            color: var(--vscode-text-secondary);
+        }
+
+        .welcome-icon {
+            font-size: 64px;
+            color: var(--vscode-accent);
+            margin-bottom: 24px;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--vscode-text);
+            margin-bottom: 12px;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .welcome-btn {
+            padding: 12px 24px;
+            background: var(--vscode-accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .welcome-btn:hover {
+            background: var(--vscode-accent-hover);
+        }
+
+        .welcome-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--vscode-border);
+            color: var(--vscode-text);
+        }
+
+        .welcome-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Code Editor */
+        .code-editor-container {
+            height: 100%;
+            display: none; /* Hidden by default, shown when file is opened */
+        }
+
+        .code-editor {
+            display: flex;
+            height: 100%;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow: hidden;
+        }
+
+        .editor-gutter {
+            display: flex;
+            flex-direction: column;
+            background: var(--vscode-sidebar);
+            border-right: 1px solid var(--vscode-border);
+            user-select: none;
+            flex-shrink: 0;
+            min-width: 40px;
+        }
+
+        .gutter-line-numbers {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .line-numbers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            text-align: right;
+            padding: 8px 4px;
+            color: var(--vscode-text-secondary);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .line-number {
+            display: block;
+            height: 1.5em;
+            line-height: 1.5em;
+            padding-right: 4px;
+        }
+
+
+
+
+
+        .code-input-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-input {
+            width: 100%;
+            height: 100%;
+            background: var(--vscode-editor);
+            color: var(--vscode-text);
+            border: none;
+            padding: 8px;
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            resize: none;
+            outline: none;
+            white-space: pre;
+            overflow: auto;
+            tab-size: 4;
+            box-sizing: border-box;
+        }
+
+        .code-input:focus {
+            outline: none;
+        }
+
+
+
+        .toolbar-btn {
+            padding: 6px;
+            background: var(--vscode-sidebar);
+            border: 1px solid var(--vscode-border);
+            color: var(--vscode-accent);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--vscode-accent);
+            color: white;
+            border-color: var(--vscode-accent);
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 20px;
+            background: var(--vscode-border);
+            margin: 0 4px;
+        }
+
+        .file-info {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--vscode-text-secondary);
+            padding: 4px 8px;
+            background: var(--vscode-sidebar);
+            border-radius: 4px;
+            border: 1px solid var(--vscode-border);
+        }
+
+        /* Chat */
+        .chat-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            max-width: 100%;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            margin-left: 20%;
+        }
+
+        .assistant-message {
+            margin-right: 20%;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background: var(--vscode-user-message);
+            color: white;
+        }
+
+        .assistant-avatar {
+            background: var(--vscode-accent);
+            color: white;
+        }
+
+        .message-role {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--vscode-text);
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: var(--vscode-text-secondary);
+        }
+
+        .message-content {
+            background: var(--vscode-assistant-message);
+            border: 1px solid var(--vscode-border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .user-message .message-content {
+            background: var(--vscode-user-message);
+            border-color: var(--vscode-user-message);
+            color: white;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 12px;
+            border-top: 1px solid var(--vscode-border);
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            background: var(--vscode-sidebar);
+        }
+
+        .message-input-container {
+            flex: 1;
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 40px;
+            max-height: 120px;
+            padding: 10px 12px;
+            background: var(--vscode-editor);
+            border: 1px solid var(--vscode-border);
+            border-radius: 6px;
+            color: var(--vscode-text);
+            font-size: 13px;
+            resize: none;
+            outline: none;
+        }
+
+        .message-input:focus {
+            border-color: var(--vscode-accent);
+        }
+
+        .send-btn {
+            height: 40px;
+            width: 40px;
+            background: var(--vscode-accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            background: var(--vscode-accent-hover);
+        }
+
+        /* Splitter */
+        .splitter-handle {
+            background: var(--vscode-border);
+            z-index: 10;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .splitter-handle:hover {
+            background: var(--vscode-accent);
+        }
+
+        .splitter-handle.vertical {
+            width: 8px;
+            cursor: col-resize;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 100;
+        }
+
+        /* Expanded hit area for better dragging */
+        .splitter-handle.vertical::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -10px;
+            right: -10px;
+            bottom: 0;
+            z-index: 99;
+            /* Uncomment for debugging: background: rgba(0, 122, 204, 0.1); */
+        }
+
+        /* Visual feedback for expanded hit area on hover */
+        .splitter-handle.vertical:hover::before {
+            /* Uncomment for debugging: background: rgba(0, 122, 204, 0.2); */
+        }
+
+        .splitter-handle.horizontal {
+            height: 8px;
+            cursor: row-resize;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 100;
+        }
+
+        /* Expanded hit area for better dragging */
+        .splitter-handle.horizontal::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            right: 0;
+            bottom: -10px;
+            z-index: 99;
+        }
+
+        /* Visual feedback for expanded hit area on hover */
+        .splitter-handle.horizontal:hover::before {
+        }
+
+        /* Main layout with splitter */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .left-column {
+            width: 500px;
+            min-width: 250px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .center-column {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Bottom Panel */
+        .bottom-panel {
+            height: 200px;
+            background: var(--vscode-sidebar);
+            border-top: 1px solid var(--vscode-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 8px 12px;
+            background: var(--vscode-tab);
+            border-bottom: 1px solid var(--vscode-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-tabs {
+            display: flex;
+            gap: 4px;
+        }
+
+        .panel-tab {
+            padding: 4px 12px;
+            background: none;
+            border: none;
+            color: var(--vscode-text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .panel-tab.active {
+            background: var(--vscode-active-tab);
+            color: var(--vscode-text);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .console-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .console-output {
+            flex: 1;
+            padding: 8px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .console-line {
+            margin: 2px 0;
+        }
+
+        .console-prompt {
+            color: var(--vscode-success);
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+        .console-input {
+            padding: 8px;
+            border-top: 1px solid var(--vscode-border);
+            display: flex;
+            align-items: center;
+        }
+
+        .console-command {
+            flex: 1;
+            background: var(--vscode-editor);
+            border: 1px solid var(--vscode-border);
+            color: var(--vscode-text);
+            padding: 4px 8px;
+            outline: none;
+        }
+
+        .thinking-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            color: var(--vscode-text-secondary);
+            font-size: 13px;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .thinking-dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--vscode-accent);
+            border-radius: 50%;
+            animation: thinkingBounce 1.4s infinite ease-in-out both;
+        }
+
+        .thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes thinkingBounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Loading */
+        .loading-placeholder {
+            padding: 20px;
+            text-align: center;
+            color: var(--vscode-text-secondary);
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--vscode-border);
+            border-top: 2px solid var(--vscode-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 22px;
+            background: var(--vscode-toolbar);
+            border-top: 1px solid var(--vscode-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 12px;
+            color: var(--vscode-text-secondary);
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.connected {
+            background: var(--vscode-success);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--vscode-scrollbar);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--vscode-scrollbar-hover);
+        }
+
+        /* File Tree */
+        .file-tree {
+            font-size: 13px;
+        }
+
+        .file-item {
+            padding: 6px 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            border-radius: 4px;
+            user-select: none;
+        }
+
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .file-item.selected {
+            background: rgba(0, 122, 204, 0.2);
+            border: 1px solid rgba(0, 122, 204, 0.5);
+        }
+
+        .folder-toggle {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--vscode-text-secondary);
+            transition: transform 0.2s;
+        }
+
+        .folder-toggle i {
+            font-size: 10px;
+        }
+
+        .folder-toggle.collapsed i {
+            transform: rotate(-90deg);
+        }
+
+        .file-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--vscode-text-secondary);
+        }
+
+        .file-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            color: var(--vscode-text-secondary);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .folder-children {
+            margin-left: 16px;
+            display: none;
+        }
+
+        .folder-children.expanded {
+            display: block;
+        }
+
+        /* Multi-View Styles (Explorer/Sessions/Trae AI) */
+        .explorer-view,
+        .sessions-view,
+        .traeai-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .explorer-content {
+            flex: 1;
+            overflow: auto;
+            padding: 12px;
+        }
+
+        .sessions-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .new-session-btn {
+            margin: 12px;
+            padding: 10px;
+            background: var(--vscode-accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .new-session-btn:hover {
+            background: var(--vscode-accent-hover);
+        }
+
+        /* Trae AI View Styles */
+        .traeai-view .chat-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .traeai-view .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .traeai-view .input-area {
+            padding: 12px;
+            border-top: 1px solid var(--vscode-border);
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            background: var(--vscode-sidebar);
+        }
+
+        .traeai-view .message-input-container {
+            flex: 1;
+        }
+
+        .traeai-view .message-input {
+            width: 100%;
+            min-height: 40px;
+            max-height: 120px;
+            padding: 10px 12px;
+            background: var(--vscode-editor);
+            border: 1px solid var(--vscode-border);
+            border-radius: 6px;
+            color: var(--vscode-text);
+            font-size: 13px;
+            resize: none;
+            outline: none;
+        }
+
+        .traeai-view .message-input:focus {
+            border-color: var(--vscode-accent);
+        }
+
+        .traeai-view .send-btn {
+            height: 40px;
+            width: 40px;
+            background: var(--vscode-accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .traeai-view .send-btn:hover {
+            background: var(--vscode-accent-hover);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Resizing state */
+        .resizing {
+            cursor: col-resize !important;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .resizing * {
+            cursor: col-resize !important;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .splitter-handle.dragging {
+            background: var(--vscode-accent) !important;
+        }
+
+        /* Ensure no interference from other elements */
+        .main-layout * {
+            box-sizing: border-box;
+        }
+
+        /* Editor Console Panel Styles */
+        .editor-console-panel {
+            border-top: 1px solid var(--vscode-border);
+            background: var(--vscode-editor);
+            display: flex;
+            flex-direction: column;
+            height: 200px;
+            min-height: 100px;
+            max-height: 400px;
+        }
+
+        .editor-console-panel .panel-header {
+            padding: 8px 12px;
+            background: var(--vscode-tab);
+            border-bottom: 1px solid var(--vscode-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 35px;
+        }
+
+        .editor-console-panel .panel-tabs {
+            display: flex;
+            gap: 1px;
+        }
+
+        .editor-console-panel .panel-tab {
+            padding: 6px 12px;
+            background: var(--vscode-tab);
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--vscode-text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .editor-console-panel .panel-tab:hover {
+            color: var(--vscode-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .editor-console-panel .panel-tab.active {
+            color: var(--vscode-text);
+            border-bottom-color: var(--vscode-accent);
+            background: var(--vscode-active-tab);
+        }
+
+        .editor-console-panel .panel-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .editor-console-panel .panel-action {
+            background: none;
+            border: none;
+            color: var(--vscode-text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .editor-console-panel .panel-action:hover {
+            color: var(--vscode-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .editor-console-panel .panel-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Console Panels inside Editor */
+        .editor-console-panel .console-container,
+        .editor-console-panel .problems-container,
+        .editor-console-panel .output-container,
+        .editor-console-panel .debug-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .editor-console-panel .console-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            font-family: 'Cascadia Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .editor-console-panel .console-line {
+            margin-bottom: 2px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .editor-console-panel .console-prompt {
+            color: var(--vscode-accent);
+            font-weight: bold;
+            user-select: none;
+            min-width: 12px;
+        }
+
+        .editor-console-panel .console-text {
+            flex: 1;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .editor-console-panel .console-text.stdout {
+            color: var(--vscode-text);
+        }
+
+        .editor-console-panel .console-text.stderr {
+            color: #f48771;
+        }
+
+        .editor-console-panel .console-input {
+            padding: 8px;
+            border-top: 1px solid var(--vscode-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--vscode-sidebar);
+        }
+
+        .editor-console-panel .console-command {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--vscode-text);
+            font-family: 'Cascadia Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .editor-console-panel .console-command::placeholder {
+            color: var(--vscode-text-secondary);
+        }
+
+        /* Problems panel */
+        .editor-console-panel .problems-list {
+            padding: 8px;
+        }
+
+        .editor-console-panel .problem-item {
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--vscode-border);
+            font-size: 12px;
+        }
+
+        .editor-console-panel .problem-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Output panel */
+        .editor-console-panel .output-content {
+            padding: 8px;
+            font-family: 'Cascadia Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .editor-console-panel .output-line {
+            margin-bottom: 2px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .editor-console-panel .output-timestamp {
+            color: var(--vscode-text-secondary);
+            min-width: 40px;
+            flex-shrink: 0;
+        }
+
+        .editor-console-panel .output-level {
+            min-width: 20px;
+            flex-shrink: 0;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .editor-console-panel .output-level.debug {
+            color: #9cdcfe;
+        }
+
+        .editor-console-panel .output-level.info {
+            color: #4ec9b0;
+        }
+
+        .editor-console-panel .output-level.warning {
+            color: #d7ba7d;
+        }
+
+        .editor-console-panel .output-level.error {
+            color: #f48771;
+        }
+
+        .editor-console-panel .output-level.success {
+            color: #4ec9b0;
+        }
+
+        .editor-console-panel .output-source {
+            color: var(--vscode-text-secondary);
+            min-width: 60px;
+            flex-shrink: 0;
+            font-style: italic;
+        }
+
+        .editor-console-panel .output-message {
+            color: var(--vscode-text);
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .editor-console-panel .output-message.error {
+            color: #f48771;
+        }
+
+        .editor-console-panel .output-message.warning {
+            color: #d7ba7d;
+        }
+
+        .editor-console-panel .output-message.success {
+            color: #4ec9b0;
+        }
+
+        .editor-console-panel .output-message.debug {
+            color: #9cdcfe;
+        }
+
+        /* Debug panel */
+        .editor-console-panel .debug-content {
+            padding: 8px;
+            font-family: 'Cascadia Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .editor-console-panel .debug-line {
+            margin-bottom: 4px;
+        }
+
+        /* Editor area layout with console */
+        .editor-area {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .editor-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Quick Settings Bar Styles */
+        .quick-settings-bar {
+            display: flex;
+            background: var(--vscode-tab);
+            border-top: 1px solid var(--vscode-border);
+            padding: 8px 12px;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .settings-item {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .settings-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--vscode-text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .settings-label:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--vscode-text);
+        }
+
+        .settings-value {
+            color: var(--vscode-accent);
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .dropdown-arrow {
+            font-size: 10px;
+            margin-left: 4px;
+            transition: transform 0.2s;
+        }
+
+        .settings-dropdown {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: var(--vscode-sidebar);
+            border: 1px solid var(--vscode-border);
+            border-radius: 6px;
+            min-width: 120px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+            margin-bottom: 4px;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            color: var(--vscode-text);
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--vscode-border);
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: var(--vscode-accent);
+            color: white;
+        }
+
+        .settings-item.active .settings-dropdown {
+            display: block;
+        }
+
+        .settings-item.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .settings-item.active .settings-label {
+            color: var(--vscode-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+	<script type="text/javascript" src="/main.js"></script>
+    <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Toolbar -->
+        <div class="top-toolbar">
+            <button class="toolbar-btn" onclick="saveFileToDisk()" title="Save (Ctrl+S)">
+                <i class="fas fa-save"></i>
+            </button>
+            <button class="toolbar-btn" onclick="runCurrentFile()" title="Run (Ctrl+R)">
+                <i class="fas fa-play"></i>
+            </button>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="formatCurrentFile()" title="Format Code">
+                <i class="fas fa-code"></i>
+            </button>
+            <div class="toolbar-separator"></div>
+            <div class="file-info">
+                <span id="current-file-info">No file open</span>
+            </div>
+        </div>
+        <div class="main-wrapper">
+            <!-- Activity Bar -->
+            <div class="activity-bar">
+                <div class="activity-item active" data-view="traeai" title="Trae AI">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="activity-item" data-view="explorer" title="Explorer">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="activity-item" data-view="sessions" title="Sessions">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="activity-item" data-view="editor" title="Editor">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div class="activity-item" data-view="settings" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </div>
+            </div>
+
+            <div class="main-layout">
+                <!-- Left: Multi-View Toggle Area (Trae AI/Explorer/Sessions) -->
+                <div class="left-column" id="left-column">
+                    <!-- Trae AI View (default visible - first position) -->
+                    <div class="traeai-view" id="traeai-view">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <i class="fas fa-robot"></i>Aickoo AI
+                            </div>
+                            <div class="column-actions">
+                                <button class="column-action" onclick="newChat()"><i class="fas fa-plus"></i></button>
+                                <button class="column-action" onclick="clearChat()"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="chat-container">
+                            <div class="chat-messages">
+                                <div class="message assistant-message">
+                                    <div class="message-header">
+                                        <div class="message-avatar assistant-avatar">
+                                            <i class="fas fa-robot"></i>
+                                        </div>
+                                        <div class="message-info">
+                                            <div class="message-role">Aickoo Assistant</div>
+                                            <div class="message-time">Now</div>
+                                        </div>
+                                    </div>
+                                    <div class="message-content">
+👋 <strong>Welcome to Aickoo AI!</strong>
+I'm your AI coding assistant and I'm now the <strong>default view</strong>.
+💬 <strong>Chat with me</strong> about coding, ask questions, or get help with your projects.
+📁 <strong>Switch to Explorer</strong> to browse and edit files.
+💭 <strong>Switch to Sessions</strong> to manage your conversations.
+Try asking me something like:
+• "How do I create a Python function?"
+• "Help me debug this code"
+• "Explain REST API design"
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-area">
+                            <div class="message-input-container">
+                                <textarea class="message-input" rows="1" placeholder="Ask me anything about coding..." onkeydown="handleKeyPress(event)"></textarea>
+                            </div>
+                            <button class="send-btn" onclick="sendMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+
+                        <!-- Quick Settings Bar -->
+                        <div class="quick-settings-bar">
+                            <div class="settings-item">
+                                <span class="settings-label" onclick="toggleSettingsDropdown('mode')">
+                                    <i class="fas fa-cog"></i> 模式
+                                    <span class="settings-value" id="mode-value">build</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </span>
+                                <div class="settings-dropdown" id="mode-dropdown">
+                                    <div class="dropdown-item" onclick="selectMode('build')">build</div>
+                                    <div class="dropdown-item" onclick="selectMode('plan')">plan</div>
+                                </div>
+                            </div>
+
+                            <div class="settings-item">
+                                <span class="settings-label" onclick="toggleSettingsDropdown('model')">
+                                    <i class="fas fa-brain"></i> 大模型
+                                    <span class="settings-value" id="model-value">deepseek</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </span>
+                                <div class="settings-dropdown" id="model-dropdown">
+                                    <div class="dropdown-item" onclick="selectModel('deepseek')">deepseek</div>
+                                    <div class="dropdown-item" onclick="selectModel('智谱')">智谱</div>
+                                </div>
+                            </div>
+
+                            <div class="settings-item" style="display: none;">
+                                <span class="settings-label" onclick="toggleSettingsDropdown('command')">
+                                    <i class="fas fa-terminal"></i> 命令
+                                    <span class="settings-value" id="command-value">!connect</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </span>
+                                <div class="settings-dropdown" id="command-dropdown">
+                                    <div class="dropdown-item" onclick="selectCommand('!connect')">!connect</div>
+                                    <div class="dropdown-item" onclick="selectCommand('!session')">!session</div>
+                                </div>
+                            </div>
+
+                            <div class="settings-item" style="display: none;">
+                                <span class="settings-label" onclick="toggleSettingsDropdown('reference')">
+                                    <i class="fas fa-link"></i> 引用
+                                    <span class="settings-value" id="reference-value">@web</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </span>
+                                <div class="settings-dropdown" id="reference-dropdown">
+                                    <div class="dropdown-item" onclick="selectReference('@web')">@web</div>
+                                    <div class="dropdown-item" onclick="selectReference('@file')">@file</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Explorer View (hidden by default) -->
+                    <div class="explorer-view hidden" id="explorer-view">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <i class="fas fa-folder"></i>EXPLORER
+                            </div>
+                            <div class="column-actions">
+                                <button class="column-action" onclick="refreshFileExplorer()"><i class="fas fa-sync-alt"></i></button>
+                                <button class="column-action" onclick="createNewFile()"><i class="fas fa-file"></i></button>
+                                <button class="column-action" onclick="createNewFolder()"><i class="fas fa-folder-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="explorer-content">
+                            <div id="file-tree" class="file-tree">
+                                <div class="loading-placeholder">
+                                    <div class="loading-spinner"></div>
+                                    <span>Loading file tree...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sessions View (hidden by default) -->
+                    <div class="sessions-view hidden" id="sessions-view">
+                        <div class="column-header">
+                            <div class="column-title">
+                                <i class="fas fa-comments"></i>SESSIONS
+                            </div>
+                            <div class="column-actions">
+                                <button class="column-action" onclick="refreshSessions()"><i class="fas fa-sync-alt"></i></button>
+                            </div>
+                        </div>
+                        <div class="sessions-list">
+                            <div class="loading-placeholder">
+                                <div class="loading-spinner"></div>
+                                <span>Loading sessions...</span>
+                            </div>
+                        </div>
+                        <button class="new-session-btn" onclick="createNewSession()">
+                            <i class="fas fa-plus"></i> New Session
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resizable Splitter between Left Column and Editor -->
+                <div class="splitter-handle vertical" id="main-splitter"></div>
+
+                <!-- Center: Editor Area with Console -->
+                <div class="center-column" id="center-column">
+                    <div class="editor-area">
+                        <div class="editor-tabs">
+                            <div class="editor-tab active" data-session="welcome">
+                                <i class="fas fa-file-alt tab-icon"></i>
+                                <span>Welcome</span>
+                                <button class="tab-close"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                         <div class="editor-content">
+                             <div class="welcome-screen">
+                                 <div class="welcome-icon">
+                                     <i class="fas fa-code"></i>
+                                 </div>
+                                 <div class="welcome-title">Code Editor</div>
+                                 <div class="welcome-subtitle">
+                                     Open a file from the Explorer or start a new session to begin.
+                                 </div>
+                                 <div class="welcome-actions">
+                                     <button class="welcome-btn" onclick="createNewFile()">
+                                         <i class="fas fa-file"></i> New File
+                                     </button>
+                                     <button class="welcome-btn secondary" onclick="openFileExplorer()">
+                                         <i class="fas fa-folder-open"></i> Browse Files
+                                     </button>
+                                 </div>
+                             </div>
+
+                             <!-- Code Editor (hidden by default) -->
+                             <div class="code-editor-container" id="code-editor-container">
+
+                                 <div class="code-editor">
+                                      <!-- Left gutter with line numbers -->
+                                      <div class="editor-gutter">
+                                          <div class="gutter-line-numbers" id="gutter-line-numbers">
+                                              <div class="line-numbers" id="line-numbers"></div>
+                                          </div>
+                                      </div>
+
+                                     <!-- Code input area -->
+                                     <div class="code-input-container">
+                                         <textarea class="code-input" id="code-input" spellcheck="false"></textarea>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+
+                        <!-- Horizontal splitter between editor and console -->
+                        <div class="splitter-handle horizontal" id="editor-console-splitter"></div>
+
+                        <!-- Console Panel (inside Editor Area) -->
+                        <div class="editor-console-panel">
+                            <div class="panel-header">
+                                <div class="panel-tabs">
+                                    <button class="panel-tab active" onclick="switchConsolePanel('console')">CONSOLE</button>
+                                    <button class="panel-tab" onclick="switchConsolePanel('problems')">PROBLEMS</button>
+                                    <button class="panel-tab" onclick="switchConsolePanel('output')">OUTPUT</button>
+                                    <!-- <button class="panel-tab" onclick="switchConsolePanel('debug')">DEBUG</button> -->
+                                </div>
+                                <div class="panel-actions">
+                                    <button class="panel-action" onclick="toggleConsolePanel()">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <button class="panel-action" onclick="clearConsole()">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="panel-content">
+                                <div class="console-container" id="console-panel">
+                                    <div class="console-output">
+                                        <div class="console-line">
+                                            <span class="console-prompt">$</span>
+                                            <span class="console-text">Aickoo AI Assistant Console - Ready</span>
+                                        </div>
+                                    </div>
+                                    <div class="console-input">
+                                        <span class="console-prompt">$</span>
+                                        <input type="text" class="console-command" placeholder="Enter command..." onkeydown="handleConsoleKeyPress(event)">
+                                    </div>
+                                </div>
+                                <div class="problems-container hidden" id="problems-panel">
+                                    <div class="problems-list">
+                                        <div class="problem-item">
+                                            <div class="problem-severity"><i class="fas fa-info-circle"></i></div>
+                                            <div class="problem-message">No problems detected</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="output-container hidden" id="output-panel">
+                                    <div class="output-content">
+                                        
+                                    </div>
+                                </div>
+                                <div class="debug-container hidden" id="debug-panel">
+                                    <div class="debug-content">
+                                        <div class="debug-line">Debug panel ready</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item">
+                    <div class="status-dot connected"></div>
+                    <span>Connected</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-code-branch"></i>
+                    <span>main</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <div class="status-item">UTF-8</div>
+                <div class="status-item">Python</div>
+                <div class="status-item">Ready</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Window switching logic
+        let currentView = 'traeai';
+
+        // Editor state
+        let editorState = {
+            activeFile: null,
+            openFiles: new Map(), // filePath -> {name, content, saved}
+            nextTabId: 1
+        };
+
+        function initializeActivityBar() {
+            const activityItems = document.querySelectorAll('.activity-item');
+            activityItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const view = this.dataset.view;
+
+                    // Update active state
+                    activityItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Switch view
+                    switchView(view);
+                });
+            });
+        }
+
+        function switchView(view) {
+            currentView = view;
+
+            // Handle left panel views (Aickoo AI, Explorer, Sessions) - Aickoo AI is first
+            if (view === 'traeai' || view === 'explorer' || view === 'sessions') {
+                // Show/hide traeai, explorer, and sessions views
+                const traeaiView = document.getElementById('traeai-view');
+                const explorerView = document.getElementById('explorer-view');
+                const sessionsView = document.getElementById('sessions-view');
+
+                // Hide all views first
+                if (traeaiView) traeaiView.classList.add('hidden');
+                if (explorerView) explorerView.classList.add('hidden');
+                if (sessionsView) sessionsView.classList.add('hidden');
+
+                // Show the selected view
+                if (view === 'traeai' && traeaiView) {
+                    traeaiView.classList.remove('hidden');
+                } else if (view === 'explorer' && explorerView) {
+                    explorerView.classList.remove('hidden');
+                } else if (view === 'sessions' && sessionsView) {
+                    sessionsView.classList.remove('hidden');
+                }
+            }
+
+            // Handle other views (editor, settings)
+            // These would show/hide other parts of the UI
+            console.log('Switched to view:', view);
+        }
+
+        async function sendMessage() {
+            // Use Aickoo AI view specific selectors
+            const input = document.querySelector('.traeai-view .message-input');
+            if (!input) return;
+
+            const text = escapeHtml(input.value.trim());
+            if (!text) return;
+
+            // Add user message
+            const messages = document.querySelector('.traeai-view .chat-messages');
+            if (!messages) return;
+
+            const msg = document.createElement('div');
+            msg.className = 'message user-message';
+            msg.innerHTML = `
+                <div class="message-header">
+                    <div class="message-avatar user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="message-info">
+                        <div class="message-role">You</div>
+                        <div class="message-time">Now</div>
+                    </div>
+                </div>
+                <div class="message-content">${text}</div>
+            `;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+            input.value = '';
+            input.style.height = 'auto';
+
+            // Show thinking indicator
+            const thinkingMsg = document.createElement('div');
+            thinkingMsg.className = 'message assistant-message';
+            thinkingMsg.id = 'thinking-indicator';
+            thinkingMsg.innerHTML = `
+                <div class="message-header">
+                    <div class="message-avatar assistant-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-info">
+                        <div class="message-role">Aickoo Assistant</div>
+                        <div class="message-time">Thinking...</div>
+                    </div>
+                </div>
+                <div class="thinking-indicator">
+                    <div class="thinking-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span>AI is thinking...</span>
+                </div>
+            `;
+            messages.appendChild(thinkingMsg);
+            messages.scrollTop = messages.scrollHeight;
+
+            // eel call server
+            let resp_msg = await eel.send_message(text, null)();
+
+            // Remove thinking indicator
+            const thinkingEl = document.getElementById('thinking-indicator');
+            if (thinkingEl) thinkingEl.remove();
+
+            // Simulate AI response
+            setTimeout(() => {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'message assistant-message';
+                aiMsg.innerHTML = `
+                    <div class="message-header">
+                        <div class="message-avatar assistant-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-info">
+                            <div class="message-role">Aickoo Assistant</div>
+                            <div class="message-time">Now</div>
+                        </div>
+                    </div>
+                    <div class="message-content">
+                        ${escapeHtml(resp_msg.content)}
+                    </div>
+                `;
+                messages.appendChild(aiMsg);
+                messages.scrollTop = messages.scrollHeight;
+            }, 10);
+        }
+
+        // Utility functions for file explorer and sessions
+        async function refreshFileExplorer(path = ".") {
+            console.log('Refreshing file explorer...', path);
+            const fileTree = document.getElementById('file-tree');
+            if (!fileTree) return;
+
+            fileTree.innerHTML = `
+                <div class="loading-placeholder">
+                    <div class="loading-spinner"></div>
+                    <span>Loading file tree...</span>
+                </div>
+            `;
+
+            try {
+                if (typeof eel !== 'undefined') {
+                    const files = await eel.list_files(path)();
+                    if (files && !files.error) {
+                        renderFileTree(fileTree, files, path);
+                    } else {
+                        console.error('Error loading files:', files?.error);
+                        fileTree.innerHTML = `<div style="color: var(--vscode-error); padding: 12px;">Error: ${files?.error || 'Failed to load files'}</div>`;
+                    }
+                } else {
+                    console.warn('Eel not available, using sample file tree');
+                    loadSampleFileTree();
+                }
+            } catch (error) {
+                console.error('Error refreshing file explorer:', error);
+                fileTree.innerHTML = `<div style="color: var(--vscode-error); padding: 12px;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function createNewFile() {
+            const filename = prompt('Enter filename:', 'newfile.py');
+            if (filename) {
+                try {
+                    if (typeof eel !== 'undefined') {
+                        const currentDir = await eel.get_current_directory()();
+                        const filePath = currentDir + '/' + filename;
+                        const response = await eel.write_file(filePath, '')();
+                        if (response && response.success) {
+                            console.log('File created:', response);
+                            refreshFileExplorer();
+
+                            // Open the new file in editor
+                            openFileInEditor(filePath, filename, '');
+                        } else {
+                            console.error('Error creating file:', response?.error);
+                            alert(`Error creating file: ${response?.error || 'Unknown error'}`);
+                        }
+                    } else {
+                        console.warn('Eel not available');
+                        // Open in editor anyway for demo
+                        openFileInEditor(`./${filename}`, filename, '');
+                    }
+                } catch (error) {
+                    console.error('Error creating file:', error);
+                }
+            }
+        }
+
+        async function createNewFolder() {
+            const foldername = prompt('Enter folder name:', 'newfolder');
+            if (foldername) {
+                try {
+                    if (typeof eel !== 'undefined') {
+                        const currentDir = await eel.get_current_directory()();
+                        const folderPath = currentDir + '/' + foldername;
+                        const response = await eel.create_directory(folderPath)();
+                        if (response && response.success) {
+                            console.log('Folder created:', response);
+                            refreshFileExplorer();
+                        } else {
+                            console.error('Error creating folder:', response?.error);
+                            alert(`Error creating folder: ${response?.error || 'Unknown error'}`);
+                        }
+                    } else {
+                        console.warn('Eel not available');
+                    }
+                } catch (error) {
+                    console.error('Error creating folder:', error);
+                }
+            }
+        }
+
+        function refreshSessions() {
+            console.log('Refreshing sessions...');
+            // Implementation would go here
+        }
+
+        function createNewSession() {
+            console.log('Creating new session...');
+            // Implementation would go here
+        }
+
+        function openFileExplorer() {
+            console.log('Opening file explorer...');
+            // Implementation would go here
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // File tree rendering functions
+        function renderFileTree(container, files, currentPath = ".") {
+            container.innerHTML = '';
+
+            // Add ".." for parent directory if not at root
+            if (currentPath !== "." && currentPath !== "/") {
+                const parentElement = document.createElement('div');
+                parentElement.className = 'file-item';
+                parentElement.dataset.path = '..';
+                parentElement.dataset.type = 'folder';
+
+                parentElement.innerHTML = `
+                    <div class="folder-toggle"></div>
+                    <div class="file-icon">
+                        <i class="fas fa-level-up-alt"></i>
+                    </div>
+                    <div class="file-name">..</div>
+                `;
+
+                parentElement.addEventListener('click', () => {
+                    const parentPath = currentPath.split('/').slice(0, -1).join('/') || '.';
+                    refreshFileExplorer(parentPath);
+                });
+
+                container.appendChild(parentElement);
+            }
+
+            files.forEach(file => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'file-item';
+                fileElement.dataset.path = file.path;
+                fileElement.dataset.type = file.is_dir ? 'folder' : 'file';
+                fileElement.dataset.name = file.name;
+
+                const icon = file.is_dir ? 'fa-folder' : getFileIcon(file.name);
+                const toggle = file.is_dir ?
+                    `<div class="folder-toggle" onclick="toggleFolder(this)"><i class="fas fa-chevron-right"></i></div>` :
+                    '<div class="folder-toggle"></div>';
+
+                // Format file size
+                let sizeText = '';
+                if (!file.is_dir && file.size) {
+                    if (file.size < 1024) {
+                        sizeText = `${file.size} B`;
+                    } else if (file.size < 1024 * 1024) {
+                        sizeText = `${(file.size / 1024).toFixed(1)} KB`;
+                    } else {
+                        sizeText = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+                    }
+                }
+
+                fileElement.innerHTML = `
+                    ${toggle}
+                    <div class="file-icon">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="file-name">${escapeHtml(file.name)}</div>
+                    ${sizeText ? `<div class="file-size">${sizeText}</div>` : ''}
+                `;
+
+                container.appendChild(fileElement);
+
+                // Add click handler for single click
+                let clickTimer = null;
+                fileElement.addEventListener('click', (e) => {
+                    if (e.target.closest('.folder-toggle')) return;
+
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                        clickTimer = null;
+                        // Double click - open file
+                        handleFileClick(file, currentPath);
+                    } else {
+                        // Single click - select file
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null;
+                            // Single click logic (select file visually)
+                            document.querySelectorAll('.file-item').forEach(item => {
+                                item.classList.remove('selected');
+                            });
+                            fileElement.classList.add('selected');
+                        }, 250);
+                    }
+                });
+            });
+        }
+
+        function getFileIcon(filename) {
+            // All files use the same icon for plain text treatment
+            return 'fa-file-alt';
+        }
+
+        function toggleFolder(toggleElement) {
+            const folderItem = toggleElement.closest('.file-item');
+            const folderPath = folderItem.dataset.path;
+
+            // Check if we already have children loaded
+            let childrenContainer = folderItem.nextElementSibling;
+            if (childrenContainer && childrenContainer.classList.contains('folder-children')) {
+                // Toggle existing children
+                const isExpanded = childrenContainer.classList.contains('expanded');
+                if (isExpanded) {
+                    childrenContainer.classList.remove('expanded');
+                    toggleElement.querySelector('i').className = 'fas fa-chevron-right';
+                } else {
+                    childrenContainer.classList.add('expanded');
+                    toggleElement.querySelector('i').className = 'fas fa-chevron-down';
+                }
+            } else {
+                // Load folder contents
+                toggleElement.querySelector('i').className = 'fas fa-spinner fa-spin';
+
+                if (typeof eel !== 'undefined') {
+                    eel.list_files(folderPath)(function(files) {
+                        toggleElement.querySelector('i').className = 'fas fa-chevron-down';
+
+                        if (files && !files.error) {
+                            // Create children container
+                            childrenContainer = document.createElement('div');
+                            childrenContainer.className = 'folder-children expanded';
+                            folderItem.parentNode.insertBefore(childrenContainer, folderItem.nextSibling);
+
+                            // Render children
+                            renderFileTree(childrenContainer, files, folderPath);
+                        } else {
+                            console.error('Error loading folder contents:', files?.error);
+                            toggleElement.querySelector('i').className = 'fas fa-chevron-right';
+                        }
+                    });
+                }
+            }
+        }
+
+        async function handleFileClick(file, currentPath) {
+            if (file.is_dir) {
+                // Navigate into directory
+                refreshFileExplorer(file.path);
+            } else {
+                // Read and open file
+                try {
+                    if (typeof eel !== 'undefined') {
+                        const response = await eel.read_file(file.path)();
+                        if (response && !response.error) {
+                            openFileInEditor(file.path, file.name, response.content);
+                        } else {
+                            console.error('Error reading file:', response?.error);
+                            alert(`Error reading file: ${response?.error || 'Unknown error'}`);
+                        }
+                    } else {
+                        console.warn('Eel not available, cannot read file');
+                    }
+                } catch (error) {
+                    console.error('Error handling file click:', error);
+                }
+            }
+        }
+
+        function openFileInEditor(filePath, filename, content) {
+            console.log('Opening file in editor:', filePath, filename);
+
+            // Check if file is already open
+            if (editorState.openFiles.has(filePath)) {
+                // Switch to existing tab
+                switchToFileTab(filePath);
+                return;
+            }
+
+            // Create new file entry - all files treated as plain text
+            const fileId = `file-${editorState.nextTabId++}`;
+
+            editorState.openFiles.set(filePath, {
+                id: fileId,
+                name: filename,
+                path: filePath,
+                content: content || '',
+                saved: true
+            });
+
+            // Create tab
+            createFileTab(filePath, filename);
+
+            // If this is the first file, show editor
+            if (editorState.openFiles.size === 1) {
+                showEditor();
+            }
+
+            // Switch to this file and activate tab
+            switchToFileTab(filePath);
+        }
+
+        function createFileTab(filePath, filename) {
+            const tabsContainer = document.querySelector('.editor-tabs');
+            const tab = document.createElement('div');
+            tab.className = 'editor-tab';
+            tab.dataset.file = filePath;
+            tab.dataset.tabId = editorState.openFiles.get(filePath).id;
+
+            // Get file icon
+            const icon = getFileIcon(filename);
+
+            tab.innerHTML = `
+                <i class="fas ${icon} tab-icon"></i>
+                <span class="tab-title">${escapeHtml(filename)}</span>
+                <button class="tab-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            // Add click handler for tab
+            tab.addEventListener('click', (e) => {
+                if (!e.target.closest('.tab-close')) {
+                    switchToFileTab(filePath);
+                }
+            });
+
+            // Add click handler for close button
+            const closeBtn = tab.querySelector('.tab-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closeFileTab(filePath, e);
+                });
+            }
+
+            tabsContainer.appendChild(tab);
+        }
+
+        function switchToFileTab(filePath) {
+            // Update tab states - deactivate all tabs first
+            const allTabs = document.querySelectorAll('.editor-tab');
+            allTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Activate the target tab - use iteration to avoid selector issues
+            let targetTab = null;
+            allTabs.forEach(tab => {
+                if (tab.dataset.file === filePath) {
+                    targetTab = tab;
+                }
+            });
+
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+
+            // Switch to file
+            switchToFile(filePath);
+        }
+
+        function switchToFile(filePath) {
+            const file = editorState.openFiles.get(filePath);
+            if (!file) return;
+
+            editorState.activeFile = filePath;
+
+            // Show editor (hide welcome screen)
+            showEditor();
+
+            // Update editor content
+            const codeInput = document.getElementById('code-input');
+            if (codeInput) {
+                codeInput.value = file.content;
+                updateLineNumbers();
+
+                // Focus editor
+                codeInput.focus();
+            }
+
+            // Update tab title if content changed - use iteration to avoid selector issues
+            let targetTab = null;
+            document.querySelectorAll('.editor-tab').forEach(tab => {
+                if (tab.dataset.file === filePath) {
+                    targetTab = tab;
+                }
+            });
+
+            if (targetTab) {
+                const titleSpan = targetTab.querySelector('.tab-title');
+                if (titleSpan) {
+                    titleSpan.textContent = file.saved ? file.name : `${file.name} *`;
+                }
+            }
+
+            // Update file info
+            updateFileInfo();
+        }
+
+        function closeFileTab(filePath, event) {
+            if (event) event.stopPropagation();
+
+            const file = editorState.openFiles.get(filePath);
+            if (!file) return;
+
+            // Check if file has unsaved changes
+            if (!file.saved) {
+                if (!confirm(`File "${file.name}" has unsaved changes. Close anyway?`)) {
+                    return;
+                }
+            }
+
+            // Remove tab - use iteration to avoid selector issues
+            let tabToRemove = null;
+            document.querySelectorAll('.editor-tab').forEach(tab => {
+                if (tab.dataset.file === filePath) {
+                    tabToRemove = tab;
+                }
+            });
+            if (tabToRemove) tabToRemove.remove();
+
+            // Remove file from state
+            editorState.openFiles.delete(filePath);
+
+            // If this was the active file, switch to another
+            if (editorState.activeFile === filePath) {
+                if (editorState.openFiles.size > 0) {
+                    // Switch to first available file
+                    const nextFile = Array.from(editorState.openFiles.keys())[0];
+                    switchToFileTab(nextFile);
+                } else {
+                    // No files left, show welcome screen
+                    showWelcomeScreen();
+                }
+            }
+        }
+
+        function showEditor() {
+            document.querySelector('.welcome-screen').style.display = 'none';
+            document.getElementById('code-editor-container').style.display = 'block';
+        }
+
+        function showWelcomeScreen() {
+            document.querySelector('.welcome-screen').style.display = 'flex';
+            document.getElementById('code-editor-container').style.display = 'none';
+            editorState.activeFile = null;
+
+            // Activate Welcome tab
+            document.querySelectorAll('.editor-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            const welcomeTab = document.querySelector('.editor-tab[data-session="welcome"]');
+            if (welcomeTab) {
+                welcomeTab.classList.add('active');
+            }
+        }
+
+        function loadSampleFileTree() {
+            const fileTree = document.getElementById('file-tree');
+            if (!fileTree) return;
+
+            const sampleFiles = [
+                { name: 'src', is_dir: true, path: './src', size: 0 },
+                { name: 'tests', is_dir: true, path: './tests', size: 0 },
+                { name: 'requirements.txt', is_dir: false, path: './requirements.txt', size: 512 },
+                { name: 'README.md', is_dir: false, path: './README.md', size: 1024 },
+                { name: '.gitignore', is_dir: false, path: './.gitignore', size: 256 }
+            ];
+
+            renderFileTree(fileTree, sampleFiles, ".");
+        }
+
+        /* ============================================
+           Editor Functions
+           ============================================ */
+
+        function updateLineNumbers() {
+            const codeInput = document.getElementById('code-input');
+            const lineNumbers = document.getElementById('line-numbers');
+            if (!codeInput || !lineNumbers) return;
+
+            const lines = codeInput.value.split('\n').length;
+            let numbersHtml = '';
+
+            for (let i = 1; i <= lines; i++) {
+                numbersHtml += `<div class="line-number" data-line="${i}">${i}</div>`;
+            }
+
+            lineNumbers.innerHTML = numbersHtml;
+
+            // Ensure line numbers area has proper height
+            const lineHeight = 1.5 * 13; // line-height * font-size
+            const totalHeight = lines * lineHeight;
+            lineNumbers.style.minHeight = `${totalHeight}px`;
+
+            // Sync scrolling
+            const gutterLineNumbers = document.getElementById('gutter-line-numbers');
+            codeInput.addEventListener('scroll', () => {
+                if (gutterLineNumbers) {
+                    gutterLineNumbers.scrollTop = codeInput.scrollTop;
+                }
+            });
+        }
+
+        // Add input event listener to code input when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeInput = document.getElementById('code-input');
+            if (codeInput) {
+                codeInput.addEventListener('input', saveCurrentFile);
+            }
+        });
+
+        function saveCurrentFile() {
+            const filePath = editorState.activeFile;
+            if (!filePath) return;
+
+            const file = editorState.openFiles.get(filePath);
+            if (!file) return;
+
+            const codeInput = document.getElementById('code-input');
+            if (!codeInput) return;
+
+            file.content = codeInput.value;
+            file.saved = false; // Mark as unsaved until actually saved to disk
+
+            // Update tab title
+            const tab = document.querySelector(`.editor-tab[data-file="${filePath}"]`);
+            if (tab) {
+                const titleSpan = tab.querySelector('.tab-title');
+                if (titleSpan) {
+                    titleSpan.textContent = `${file.name} *`;
+                }
+            }
+
+            console.log('File marked as modified:', filePath);
+            updateFileInfo();
+        }
+
+        async function saveFileToDisk() {
+            const filePath = editorState.activeFile;
+            if (!filePath) return;
+
+            const file = editorState.openFiles.get(filePath);
+            if (!file) return;
+
+            try {
+                if (typeof eel !== 'undefined') {
+                    const response = await eel.write_file(filePath, file.content)();
+                    if (response && response.success) {
+                        file.saved = true;
+
+                        // Update tab title - use iteration to avoid selector issues
+                        let targetTab = null;
+                        document.querySelectorAll('.editor-tab').forEach(tab => {
+                            if (tab.dataset.file === filePath) {
+                                targetTab = tab;
+                            }
+                        });
+                        if (targetTab) {
+                            const titleSpan = targetTab.querySelector('.tab-title');
+                            if (titleSpan) {
+                                titleSpan.textContent = file.name;
+                            }
+                        }
+
+                        console.log('File saved to disk:', filePath);
+                        updateFileInfo();
+                        // Don't show alert for normal save operations
+                        // alert(`File saved: ${file.name}`);
+                    } else {
+                        console.error('Error saving file:', response?.error);
+                        alert(`Error saving file: ${response?.error || 'Unknown error'}`);
+                    }
+                } else {
+                    // Even if eel is not available, update the save status in the UI
+                    file.saved = true;
+
+                    // Update tab title - use iteration to avoid selector issues
+                    let targetTab = null;
+                    document.querySelectorAll('.editor-tab').forEach(tab => {
+                        if (tab.dataset.file === filePath) {
+                            targetTab = tab;
+                        }
+                    });
+                    if (targetTab) {
+                        const titleSpan = targetTab.querySelector('.tab-title');
+                        if (titleSpan) {
+                            titleSpan.textContent = file.name;
+                        }
+                    }
+
+                    console.log('File marked as saved (eel not available):', filePath);
+                    updateFileInfo();
+                }
+            } catch (error) {
+                console.error('Error saving file:', error);
+                alert(`Error saving file: ${error.message}`);
+            }
+        }
+
+        function runCurrentFile() {
+            const filePath = editorState.activeFile;
+            if (!filePath) return;
+
+            const file = editorState.openFiles.get(filePath);
+            if (!file) return;
+
+            console.log('Running file:', file.name);
+
+            // Switch to output panel
+            switchConsolePanel('output');
+
+            // Simulate running Python file
+            const output = `Running ${file.name}...\n`;
+            appendToConsole(output, 'info');
+
+            // Check if it's a Python file
+            if (file.name.endsWith('.py')) {
+                appendToConsole('>>> Python interpreter would execute the code here', 'info');
+                appendToConsole('>>> Output would appear here', 'info');
+            }
+
+            appendToConsole('Execution completed.', 'success');
+        }
+
+        function formatCurrentFile() {
+            const codeInput = document.getElementById('code-input');
+            if (!codeInput) return;
+
+            // Simple formatting - just trim trailing whitespace
+            const lines = codeInput.value.split('\n');
+            const formatted = lines.map(line => line.replace(/\s+$/, '')).join('\n');
+
+            codeInput.value = formatted;
+
+            // Update
+            updateLineNumbers();
+            saveCurrentFile();
+
+            console.log('File formatted');
+            alert('File formatted (simple whitespace cleanup)');
+        }
+
+
+
+        function updateFileInfo() {
+            const fileInfo = document.getElementById('current-file-info');
+            if (!fileInfo) return;
+
+            const file = editorState.activeFile ? editorState.openFiles.get(editorState.activeFile) : null;
+            if (file) {
+                const lines = file.content.split('\n').length;
+                const size = file.content.length;
+                fileInfo.textContent = `${file.name} | ${lines} lines | ${size} chars`;
+            } else {
+                fileInfo.textContent = 'No file open';
+            }
+        }
+
+        // Middle click to close tab
+        document.addEventListener('mousedown', (e) => {
+            if (e.button === 1) { // Middle click
+                const tab = e.target.closest('.editor-tab');
+                if (tab && tab.dataset.file) {
+                    e.preventDefault();
+                    closeFileTab(tab.dataset.file);
+                }
+            }
+        });
+
+        // Close tab with Ctrl+W
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+                if (editorState.activeFile) {
+                    e.preventDefault();
+                    closeFileTab(editorState.activeFile);
+                }
+            }
+        });
+
+        /* Quick Settings Bar Functions */
+        let activeDropdown = null;
+
+        function toggleSettingsDropdown(type) {
+            const dropdown = document.getElementById(`${type}-dropdown`);
+            const item = dropdown.closest('.settings-item');
+
+            // Close other dropdowns
+            if (activeDropdown && activeDropdown !== dropdown) {
+                const activeItem = activeDropdown.closest('.settings-item');
+                activeItem.classList.remove('active');
+            }
+
+            // Toggle current dropdown
+            item.classList.toggle('active');
+
+            if (item.classList.contains('active')) {
+                activeDropdown = dropdown;
+
+                // Close dropdown when clicking outside
+                setTimeout(() => {
+                    const closeHandler = (e) => {
+                        if (!item.contains(e.target)) {
+                            item.classList.remove('active');
+                            activeDropdown = null;
+                            document.removeEventListener('click', closeHandler);
+                        }
+                    };
+                    document.addEventListener('click', closeHandler);
+                }, 0);
+            } else {
+                activeDropdown = null;
+            }
+        }
+
+        // 封装通用关闭下拉框函数
+        function closeDropdown(type) {
+            const dropdown = document.getElementById(`${type}-dropdown`);
+            const item = dropdown.closest('.settings-item');
+            item.classList.remove('active');
+            activeDropdown = null;
+        }
+
+        function selectMode(mode) {
+            document.getElementById('mode-value').textContent = mode;
+            console.log('Mode selected:', mode);
+            // Here you would implement the actual mode change logic
+            closeDropdown('mode'); // 调用通用函数
+        }
+
+        function selectModel(model) {
+            document.getElementById('model-value').textContent = model;
+            console.log('Model selected:', model);
+            // Here you would implement the actual model change logic
+            closeDropdown('model'); // 调用通用函数
+        }
+
+        function selectCommand(command) {
+            document.getElementById('command-value').textContent = command;
+            console.log('Command selected:', command);
+            // Here you would implement the actual command change logic
+            closeDropdown('command'); // 调用通用函数
+        }
+
+        function selectReference(reference) {
+            document.getElementById('reference-value').textContent = reference;
+            console.log('Reference selected:', reference);
+            // Here you would implement the actual reference change logic
+            closeDropdown('reference'); // 调用通用函数
+        }
+
+        // Initialize quick settings
+        function initializeQuickSettings() {
+            // Set default values
+            selectMode('build');
+            selectModel('deepseek');
+            selectCommand('!connect');
+            selectReference('@web');
+
+            console.log('Quick settings initialized');
+        }
+
+        function handleKeyPress(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+
+            // Auto-resize textarea
+            if (event.target.classList.contains('message-input')) {
+                setTimeout(() => {
+                    event.target.style.height = 'auto';
+                    event.target.style.height = Math.min(event.target.scrollHeight, 120) + 'px';
+                }, 0);
+            }
+        }
+
+        /* Console Panel Functions */
+        let consolePanelVisible = true;
+        let currentConsolePanel = 'console';
+
+        function switchConsolePanel(panelName) {
+            currentConsolePanel = panelName;
+
+            // Update tabs
+            document.querySelectorAll('.editor-console-panel .panel-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent === panelName.toUpperCase());
+            });
+
+            // Update panels
+            const panels = ['console', 'problems', 'output', 'debug'];
+            panels.forEach(panel => {
+                const panelElement = document.getElementById(`${panel}-panel`);
+                if (panelElement) {
+                    panelElement.classList.toggle('hidden', panel !== panelName);
+                }
+            });
+
+            // If switching to output panel, remove indicator and load logs
+            if (panelName === 'output') {
+                removeOutputTabIndicator();
+                // First clear the output panel
+                clearOutput();
+                // Then load historical logs
+                loadHistoricalLogs().then(() => {
+                    // Ensure scroll position is at top after logs are loaded
+                    const outputContent = document.querySelector('.editor-console-panel .output-content');
+                    if (outputContent) {
+                        outputContent.scrollTop = 0;
+                    }
+                });
+            }
+
+            console.log('Switched to panel:', panelName);
+        }
+
+        function toggleConsolePanel() {
+            const consolePanel = document.querySelector('.editor-console-panel');
+            const toggleButton = document.querySelector('.editor-console-panel .panel-action .fa-chevron-down');
+
+            if (consolePanel) {
+                consolePanelVisible = !consolePanelVisible;
+
+                if (consolePanelVisible) {
+                    consolePanel.style.display = 'flex';
+                    if (toggleButton) {
+                        toggleButton.className = 'fas fa-chevron-down';
+                    }
+                } else {
+                    consolePanel.style.display = 'none';
+                    if (toggleButton) {
+                        toggleButton.className = 'fas fa-chevron-up';
+                    }
+                }
+            }
+        }
+
+        function clearConsole() {
+            const consoleOutput = document.querySelector('.editor-console-panel .console-output');
+            if (consoleOutput) {
+                consoleOutput.innerHTML = `
+                    <div class="console-line">
+                        <span class="console-prompt">$</span>
+                        <span class="console-text">Console cleared</span>
+                    </div>
+                `;
+                console.log('Console cleared');
+            }
+            // Also clear output panel
+            clearOutput();
+        }
+
+        function handleConsoleKeyPress(event) {
+            if (event.key === 'Enter') {
+                runConsoleCommand();
+            }
+        }
+
+        function runConsoleCommand() {
+            const commandInput = document.querySelector('.editor-console-panel .console-command');
+            if (!commandInput) return;
+
+            const command = commandInput.value.trim();
+            if (!command) return;
+
+            // Add command to console output
+            appendToConsole(`$ ${command}`, 'prompt');
+
+            // Process command
+            processConsoleCommand(command);
+
+            // Clear input
+            commandInput.value = '';
+        }
+
+        function initializeEditorEvents() {
+            const codeInput = document.getElementById('code-input');
+            if (!codeInput) return;
+
+            // Update line numbers on input
+            codeInput.addEventListener('input', () => {
+                updateLineNumbers();
+                saveCurrentFile(); // Mark as modified
+            });
+
+            // Update on scroll
+            codeInput.addEventListener('scroll', () => {
+                const gutterLineNumbers = document.getElementById('gutter-line-numbers');
+                if (gutterLineNumbers) {
+                    gutterLineNumbers.scrollTop = codeInput.scrollTop;
+                }
+            });
+
+            // Keyboard shortcuts
+            codeInput.addEventListener('keydown', (e) => {
+                // Ctrl/Cmd + S to save
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveFileToDisk();
+                }
+
+                // Ctrl/Cmd + R to run
+                if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                    e.preventDefault();
+                    runCurrentFile();
+                }
+
+                // Tab key handling
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = codeInput.selectionStart;
+                    const end = codeInput.selectionEnd;
+
+                    // Insert 4 spaces
+                    codeInput.value = codeInput.value.substring(0, start) + '    ' + codeInput.value.substring(end);
+
+                    // Move cursor
+                    codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+
+                    // Update
+                    updateLineNumbers();
+                    saveCurrentFile();
+                }
+            });
+
+            // Initial update
+            updateLineNumbers();
+        }
+
+        // Initialize Welcome tab click handler
+        function initializeWelcomeTab() {
+            // Add click handler for Welcome tab
+            const welcomeTab = document.querySelector('.editor-tab[data-session="welcome"]');
+            if (welcomeTab) {
+                // Remove close button from Welcome tab (it shouldn't be closable)
+                const closeBtn = welcomeTab.querySelector('.tab-close');
+                if (closeBtn) {
+                    closeBtn.style.display = 'none';
+                    // Also remove the close button from DOM to prevent any interaction
+                    closeBtn.remove();
+                }
+
+                welcomeTab.addEventListener('click', (e) => {
+                    // Always switch to Welcome tab when clicked
+                    // Deactivate all tabs
+                    document.querySelectorAll('.editor-tab').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+
+                    // Activate Welcome tab
+                    welcomeTab.classList.add('active');
+
+                    // Show welcome screen
+                    showWelcomeScreen();
+                });
+
+                console.log('Welcome tab click handler initialized');
+            }
+        }
+
+        function appendToConsole(text, type = 'info') {
+            const consoleOutput = document.querySelector('.editor-console-panel .console-output');
+            if (!consoleOutput) return;
+
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                const lineElement = document.createElement('div');
+                lineElement.className = 'console-line';
+
+                if (type === 'prompt') {
+                    lineElement.innerHTML = `
+                        <span class="console-prompt">$</span>
+                        <span class="console-text">${escapeHtml(line)}</span>
+                    `;
+                } else if (type === 'stdout') {
+                    // Shell stdout - no prefix, just the text
+                    lineElement.innerHTML = `
+                        <span class="console-text stdout">${escapeHtml(line)}</span>
+                    `;
+                } else if (type === 'stderr') {
+                    // Shell stderr - shown in red
+                    lineElement.innerHTML = `
+                        <span class="console-text stderr">${escapeHtml(line)}</span>
+                    `;
+                } else {
+                    const prompt = type === 'error' ? '!' : type === 'success' ? '✓' : '>';
+                    const textClass = `console-text ${type}`;
+                    lineElement.innerHTML = `
+                        <span class="console-prompt">${prompt}</span>
+                        <span class="${textClass}">${escapeHtml(line)}</span>
+                    `;
+                }
+
+                consoleOutput.appendChild(lineElement);
+            });
+
+            // Scroll to bottom
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        /* ============================================
+           Python Log Output Functions
+           ============================================ */
+
+        // Expose functions to be called from Python via eel
+        if (typeof eel !== 'undefined') {
+            eel.expose(pythonLogReceived);
+            eel.expose(shellOutputReceived);
+            console.log('Python functions exposed');
+        }
+
+        function pythonLogReceived(logEntry) {
+            appendToOutput(logEntry);
+        }
+
+        // Initialize Python log receiver
+        function initializePythonLogReceiver() {
+            if (typeof eel !== 'undefined') {
+                console.log('Python log receiver initialized');
+            }
+        }
+
+        // Append log entry to Output panel
+        function appendToOutput(logEntry) {
+            const outputContent = document.querySelector('.editor-console-panel .output-content');
+            if (!outputContent) return;
+
+            const lineElement = document.createElement('div');
+            lineElement.className = 'output-line';
+
+            const timestamp = logEntry.timestamp || new Date().toLocaleTimeString();
+            const level = logEntry.level || 'info';
+            const source = logEntry.source || 'python';
+            const message = logEntry.message || '';
+
+            lineElement.innerHTML = `
+                <span class="output-timestamp">${escapeHtml(timestamp)}</span>
+                <span class="output-level ${level}">${escapeHtml(level)}</span>
+                <span class="output-source">[${escapeHtml(source)}]</span>
+                <span class="output-message ${level}">${escapeHtml(message)}</span>
+            `;
+
+            outputContent.appendChild(lineElement);
+
+            // Auto-scroll to bottom
+            outputContent.scrollTop = outputContent.scrollHeight;
+
+            // Limit number of lines (keep last 1000)
+            const lines = outputContent.querySelectorAll('.output-line');
+            if (lines.length > 1000) {
+                for (let i = 0; i < lines.length - 1000; i++) {
+                    lines[i].remove();
+                }
+            }
+
+            // If output panel is not active, show indicator on tab
+            if (currentConsolePanel !== 'output') {
+                showOutputTabIndicator();
+            }
+        }
+
+        // Show indicator on OUTPUT tab
+        function showOutputTabIndicator() {
+            const outputTab = document.querySelector('.editor-console-panel .panel-tab:nth-child(3)');
+            if (outputTab && !outputTab.querySelector('.tab-indicator')) {
+                const indicator = document.createElement('span');
+                indicator.className = 'tab-indicator';
+                indicator.textContent = '*';
+                indicator.style.color = 'var(--vscode-accent)';
+                indicator.style.marginLeft = '4px';
+                indicator.style.fontWeight = 'bold';
+                outputTab.appendChild(indicator);
+            }
+        }
+
+        // Remove indicator from OUTPUT tab
+        function removeOutputTabIndicator() {
+            const indicator = document.querySelector('.editor-console-panel .panel-tab:nth-child(3) .tab-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // Clear Output panel
+        function clearOutput() {
+            const outputContent = document.querySelector('.editor-console-panel .output-content');
+            if (outputContent) {
+                outputContent.innerHTML = '<div class="output-line"><span class="output-message">Output panel cleared</span></div>';
+            }
+        }
+
+        // Load historical logs from Python
+        async function loadHistoricalLogs(limit = 100) {
+            if (typeof eel === 'undefined') {
+                console.warn('Eel not available, cannot load historical logs');
+                return;
+            }
+
+            try {
+                const logs = await eel.get_logs(limit)();
+                if (logs && Array.isArray(logs)) {
+                    const outputContent = document.querySelector('.editor-console-panel .output-content');
+                    if (!outputContent) return;
+
+                    // Clear existing content
+                    outputContent.innerHTML = '';
+
+                    // Load all logs directly without using appendToOutput
+                    logs.forEach(logEntry => {
+                        const lineElement = document.createElement('div');
+                        lineElement.className = 'output-line';
+
+                        const timestamp = logEntry.timestamp || new Date().toLocaleTimeString();
+                        const level = logEntry.level || 'info';
+                        const source = logEntry.source || 'python';
+                        const message = logEntry.message || '';
+
+                        lineElement.innerHTML = `
+                            <span class="output-timestamp">${escapeHtml(timestamp)}</span>
+                            <span class="output-level ${level}">${escapeHtml(level)}</span>
+                            <span class="output-source">[${escapeHtml(source)}]</span>
+                            <span class="output-message ${level}">${escapeHtml(message)}</span>
+                        `;
+
+                        outputContent.appendChild(lineElement);
+                    });
+
+                    // Limit number of lines (keep last 1000)
+                    const lines = outputContent.querySelectorAll('.output-line');
+                    if (lines.length > 1000) {
+                        for (let i = 0; i < lines.length - 1000; i++) {
+                            lines[i].remove();
+                        }
+                    }
+
+                    // Ensure scroll position is at top
+                    outputContent.scrollTop = 0;
+                }
+            } catch (error) {
+                console.error('Error loading historical logs:', error);
+            }
+        }
+
+        // Current working directory for shell
+        let shellCwd = null;
+        let isShellCommandRunning = false;
+
+        // Initialize shell
+        async function initializeShell() {
+            try {
+                if (typeof eel !== 'undefined') {
+                    shellCwd = await eel.get_current_directory()();
+                    updateShellPrompt();
+                }
+            } catch (error) {
+                console.error('Error initializing shell:', error);
+                shellCwd = '.';
+            }
+        }
+
+        // Update shell prompt with current directory
+        function updateShellPrompt() {
+            const promptElements = document.querySelectorAll('.console-prompt');
+            promptElements.forEach(el => {
+                if (el.parentElement.classList.contains('console-input')) {
+                    // Show current directory in prompt
+                    const displayPath = shellCwd ? shellCwd.split('\\').pop() : '$';
+                    el.textContent = `${displayPath}>`;
+                }
+            });
+        }
+
+        // Handle shell output from Python
+        function shellOutputReceived(output) {
+            if (output.type === 'stdout') {
+                appendToConsole(output.data, 'stdout');
+            } else if (output.type === 'stderr') {
+                appendToConsole(output.data, 'stderr');
+            } else if (output.type === 'error') {
+                appendToConsole(output.data, 'error');
+                isShellCommandRunning = false;
+                showShellInput();
+            } else if (output.type === 'complete') {
+                isShellCommandRunning = false;
+                showShellInput();
+                // Update prompt after command completes
+                updateShellPrompt();
+            }
+        }
+
+        // Hide shell input while command is running
+        function hideShellInput() {
+            const consoleInput = document.querySelector('.console-input');
+            if (consoleInput) {
+                consoleInput.style.display = 'none';
+            }
+        }
+
+        // Show shell input
+        function showShellInput() {
+            const consoleInput = document.querySelector('.console-input');
+            if (consoleInput) {
+                consoleInput.style.display = 'flex';
+                // Focus the input
+                const input = consoleInput.querySelector('.console-command');
+                if (input) {
+                    input.focus();
+                }
+            }
+        }
+
+        function processConsoleCommand(command) {
+            const lowerCommand = command.toLowerCase().trim();
+
+            // Handle built-in commands
+            if (lowerCommand === 'clear' || lowerCommand === 'cls') {
+                clearConsole();
+                return;
+            } else if (lowerCommand === 'help') {
+                appendToConsole('Available commands:', 'info');
+                appendToConsole('  clear/cls - Clear console', 'info');
+                appendToConsole('  help - Show this help', 'info');
+                appendToConsole('', 'info');
+                appendToConsole('You can also run any PowerShell/CMD commands:', 'info');
+                appendToConsole('  dir, ls, cd, pwd, echo, type, cat, etc.', 'info');
+                appendToConsole('  python script.py', 'info');
+                appendToConsole('  git status', 'info');
+                appendToConsole('  npm install', 'info');
+                return;
+            }
+
+            // Handle cd command specially to track directory changes
+            if (lowerCommand.startsWith('cd ')) {
+                const path = command.substring(3).trim();
+                handleCdCommand(path);
+                return;
+            }
+
+            // Execute any other command through shell
+            executeShellCommand(command);
+        }
+
+        // Handle cd command
+        async function handleCdCommand(path) {
+            try {
+                if (typeof eel !== 'undefined') {
+                    const result = await eel.change_directory(path)();
+                    if (result.success) {
+                        shellCwd = result.cwd;
+                        updateShellPrompt();
+                        appendToConsole('', 'info'); // Empty line for spacing
+                    } else {
+                        appendToConsole(`cd: ${result.error}`, 'error');
+                    }
+                }
+            } catch (error) {
+                appendToConsole(`cd: ${error.message}`, 'error');
+            }
+        }
+
+        // Execute shell command
+        async function executeShellCommand(command) {
+            try {
+                if (typeof eel === 'undefined') {
+                    appendToConsole('Shell not available', 'error');
+                    return;
+                }
+
+                isShellCommandRunning = true;
+                hideShellInput();
+
+                const result = await eel.execute_shell_command(command, shellCwd)();
+                if (!result.success) {
+                    appendToConsole(`Error: ${result.error}`, 'error');
+                    isShellCommandRunning = false;
+                    showShellInput();
+                }
+                // Command output will be received via shellOutputReceived callback
+            } catch (error) {
+                appendToConsole(`Error: ${error.message}`, 'error');
+                isShellCommandRunning = false;
+                showShellInput();
+            }
+        }
+
+        // Initialize everything on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize activity bar for window switching
+            initializeActivityBar();
+
+            // Initialize quick settings bar
+            initializeQuickSettings();
+
+
+
+            // Auto-resize Aickoo AI input
+            const traeAIInput = document.querySelector('.traeai-view .message-input');
+            if (traeAIInput) {
+                traeAIInput.addEventListener('input', () => {
+                    traeAIInput.style.height = 'auto';
+                    traeAIInput.style.height = Math.min(traeAIInput.scrollHeight, 200) + 'px';
+                });
+            }
+
+            // Initialize console panel
+            switchConsolePanel('console');
+
+            // Initialize Python log receiver
+            initializePythonLogReceiver();
+
+            // Initialize shell
+            initializeShell();
+
+            // Add sample output to console
+            setTimeout(() => {
+                appendToConsole('Editor console initialized', 'success');
+                appendToConsole('Type "help" for available commands', 'info');
+                appendToConsole('Tip: Drag the vertical line between Aickoo AI and Editor to resize', 'info');
+            }, 500);
+
+            // Initialize main splitter
+            initializeMainSplitter();
+
+            // Initialize editor-console splitter
+            initializeEditorConsoleSplitter();
+
+            // Add debug info (optional)
+            setTimeout(() => {
+                const splitter = document.getElementById('main-splitter');
+                const leftColumn = document.getElementById('left-column');
+                if (splitter && leftColumn) {
+                    console.log('Splitter debug info:');
+                    console.log('- Splitter width:', splitter.offsetWidth, 'px');
+                    console.log('- Left column width:', leftColumn.offsetWidth, 'px');
+                    console.log('- Left column min-width:', getComputedStyle(leftColumn).minWidth);
+                    console.log('- Expanded hit area: splitter ±10px');
+                }
+            }, 1000);
+
+            // Initialize file explorer
+            setTimeout(() => {
+                refreshFileExplorer();
+            }, 1500);
+
+            // Initialize editor event listeners
+            initializeEditorEvents();
+
+            // Initialize Welcome tab click handler
+            initializeWelcomeTab();
+
+            console.log('Aickoo AI interface fully initialized');
+        });
+
+        /* ============================================
+           Splitter Drag Functionality
+           ============================================ */
+
+        function initializeMainSplitter() {
+			const splitter = document.getElementById('main-splitter');
+			const leftColumn = document.getElementById('left-column');
+			const centerColumn = document.getElementById('center-column');
+
+			if (!splitter || !leftColumn || !centerColumn) return;
+
+			let isResizing = false;
+
+			splitter.addEventListener('mousedown', (e) => {
+				isResizing = true;
+				document.body.classList.add('resizing');
+				splitter.classList.add('dragging');
+				e.preventDefault();
+			});
+
+			document.addEventListener('mousemove', (e) => {
+				if (!isResizing) return;
+				const mainLayout = document.querySelector('.main-layout');
+				const rect = mainLayout.getBoundingClientRect();
+				let newWidth = e.clientX - rect.left;
+
+				// 你可以自由改这里的最小/最大宽度
+				const minWidth = 180;
+				const maxWidth = 800;
+
+				if (newWidth < minWidth) newWidth = minWidth;
+				if (newWidth > maxWidth) newWidth = maxWidth;
+
+				leftColumn.style.width = newWidth + 'px';
+			});
+
+			document.addEventListener('mouseup', () => {
+				if (isResizing) {
+					isResizing = false;
+					document.body.classList.remove('resizing');
+					splitter.classList.remove('dragging');
+				}
+			});
+        }
+
+        function initializeEditorConsoleSplitter() {
+            const splitter = document.getElementById('editor-console-splitter');
+            const editorContent = document.querySelector('.editor-content');
+            const consolePanel = document.querySelector('.editor-console-panel');
+
+            if (!splitter || !editorContent || !consolePanel) return;
+
+            let isResizing = false;
+
+            splitter.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                document.body.classList.add('resizing');
+                document.body.style.cursor = 'row-resize';
+                splitter.classList.add('dragging');
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const editorArea = document.querySelector('.editor-area');
+                const rect = editorArea.getBoundingClientRect();
+                let newHeight = e.clientY - rect.top;
+
+                // 最小/最大高度限制
+                const minHeight = 100; // 编辑器最小高度
+                const maxHeight = rect.height - 100; // 控制台最小高度
+
+                if (newHeight < minHeight) newHeight = minHeight;
+                if (newHeight > maxHeight) newHeight = maxHeight;
+
+                editorContent.style.height = newHeight + 'px';
+                consolePanel.style.flex = '0 0 auto';
+                consolePanel.style.height = (rect.height - newHeight - 8) + 'px'; // 8px 是分隔条的高度
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    splitter.classList.remove('dragging');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

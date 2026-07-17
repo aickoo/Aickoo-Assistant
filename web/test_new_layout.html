@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Layout Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --vscode-background: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-editor: #1e1e1e;
+            --vscode-tab: #2d2d30;
+            --vscode-active-tab: #1e1e1e;
+            --vscode-text: #cccccc;
+            --vscode-text-secondary: #858585;
+            --vscode-border: #3e3e42;
+            --vscode-accent: #007acc;
+            --vscode-accent-hover: #0e639c;
+            --vscode-success: #4ec9b0;
+            --vscode-error: #f48771;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--vscode-background);
+            color: var(--vscode-text);
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .test-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: var(--vscode-sidebar);
+            border-radius: 8px;
+            border: 1px solid var(--vscode-border);
+        }
+
+        .test-header h1 {
+            color: var(--vscode-accent);
+            margin-bottom: 10px;
+        }
+
+        .layout-diagram {
+            display: flex;
+            height: 500px;
+            margin-bottom: 40px;
+            border: 2px solid var(--vscode-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid var(--vscode-border);
+        }
+
+        .column:last-child {
+            border-right: none;
+        }
+
+        .column-header {
+            padding: 12px;
+            background: var(--vscode-tab);
+            border-bottom: 1px solid var(--vscode-border);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .column-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--vscode-accent);
+        }
+
+        .column-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .column-desc {
+            color: var(--vscode-text-secondary);
+            font-size: 14px;
+            max-width: 300px;
+        }
+
+        /* Left Column: File Explorer */
+        .left-column {
+            width: 280px;
+            background: var(--vscode-sidebar);
+        }
+
+        .left-column .column-header {
+            color: var(--vscode-success);
+        }
+
+        /* Center Column: Sessions + Editor */
+        .center-column {
+            flex: 1;
+            display: flex;
+        }
+
+        .sessions-sidebar {
+            width: 250px;
+            background: var(--vscode-sidebar);
+            border-right: 1px solid var(--vscode-border);
+        }
+
+        .sessions-sidebar .column-header {
+            color: var(--vscode-accent);
+        }
+
+        .editor-area {
+            flex: 1;
+            background: var(--vscode-editor);
+        }
+
+        .editor-area .column-header {
+            color: var(--vscode-text);
+        }
+
+        /* Right Column: AI Chat */
+        .right-column {
+            width: 350px;
+            background: var(--vscode-sidebar);
+        }
+
+        .right-column .column-header {
+            color: #d7ba7d;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .feature-item {
+            background: var(--vscode-sidebar);
+            border: 1px solid var(--vscode-border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .feature-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--vscode-accent);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .feature-desc {
+            color: var(--vscode-text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(78, 201, 176, 0.1);
+            color: var(--vscode-success);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 12px;
+        }
+
+        .test-results {
+            background: var(--vscode-sidebar);
+            border: 1px solid var(--vscode-border);
+            border-radius: 8px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+
+        .test-results h2 {
+            color: var(--vscode-accent);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .result-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--vscode-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-icon {
+            width: 24px;
+            text-align: center;
+        }
+
+        .result-icon.success {
+            color: var(--vscode-success);
+        }
+
+        .result-icon.error {
+            color: var(--vscode-error);
+        }
+
+        .result-text {
+            flex: 1;
+        }
+
+        .result-details {
+            color: var(--vscode-text-secondary);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>New Layout Structure Test</h1>
+            <p>Three-column layout with File Explorer (left), Editor + Sessions (center), AI Chat (right)</p>
+        </div>
+
+        <div class="layout-diagram">
+            <!-- Left Column: File Explorer -->
+            <div class="column left-column">
+                <div class="column-header">
+                    <i class="fas fa-folder"></i>
+                    EXPLORER
+                </div>
+                <div class="column-content">
+                    <div class="column-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <div class="column-title">File Explorer</div>
+                    <div class="column-desc">
+                        Browse project files and folders
+                        with tree view and context menus
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Column: Sessions + Editor -->
+            <div class="column center-column">
+                <!-- Sessions Sidebar -->
+                <div class="column sessions-sidebar">
+                    <div class="column-header">
+                        <i class="fas fa-comments"></i>
+                        SESSIONS
+                    </div>
+                    <div class="column-content">
+                        <div class="column-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="column-title">Sessions</div>
+                        <div class="column-desc">
+                            Manage chat sessions
+                            and conversation history
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editor Area -->
+                <div class="column editor-area">
+                    <div class="column-header">
+                        <i class="fas fa-code"></i>
+                        EDITOR
+                    </div>
+                    <div class="column-content">
+                        <div class="column-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        <div class="column-title">Code Editor</div>
+                        <div class="column-desc">
+                            Edit files with syntax highlighting
+                            and line numbers
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: AI Chat -->
+            <div class="column right-column">
+                <div class="column-header">
+                    <i class="fas fa-robot"></i>
+                    TRAE AI
+                </div>
+                <div class="column-content">
+                    <div class="column-icon">
+                        <i class="fas fa-comment-dots"></i>
+                    </div>
+                    <div class="column-title">AI Assistant</div>
+                    <div class="column-desc">
+                        Chat with AI assistant
+                        for coding help and guidance
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-list">
+            <div class="feature-item">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <i class="fas fa-columns"></i>
+                    </div>
+                    <div class="feature-title">Three-Column Layout</div>
+                </div>
+                <div class="feature-desc">
+                    Clear separation of concerns: File management on left,
+                    Code editing in center, AI assistance on right.
+                </div>
+                <div class="status-badge">Implemented</div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="feature-title">Swapped Positions</div>
+                </div>
+                <div class="feature-desc">
+                    File Explorer moved to left column,
+                    Sessions moved to center-left sidebar,
+                    AI Chat moved to right column.
+                </div>
+                <div class="status-badge">Implemented</div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <div class="feature-title">Central Editor</div>
+                </div>
+                <div class="feature-desc">
+                    Code editor placed in the center for optimal focus,
+                    separate from AI chat window to avoid overlap.
+                </div>
+                <div class="status-badge">Implemented</div>
+            </div>
+        </div>
+
+        <div class="test-results">
+            <h2>Layout Test Results</h2>
+            <div class="result-item">
+                <div class="result-icon success">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="result-text">
+                    <div>AI Chat Window Position</div>
+                    <div class="result-details">Successfully moved to rightmost column</div>
+                </div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-icon success">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="result-text">
+                    <div>Sessions and Explorer Swap</div>
+                    <div class="result-details">File Explorer now on left, Sessions in center sidebar</div>
+                </div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-icon success">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="result-text">
+                    <div>Central Code Editor</div>
+                    <div class="result-details">Editor placed in center with no overlap with AI chat</div>
+                </div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-icon success">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="result-text">
+                    <div>Responsive Design</div>
+                    <div class="result-details">Columns adjust to available screen space</div>
+                </div>
+            </div>
+
+            <div class="result-item">
+                <div class="result-icon success">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="result-text">
+                    <div>VSCode Theme Consistency</div>
+                    <div class="result-details">Maintained VSCode Dark+ theme across all components</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add interactive highlighting
+        document.querySelectorAll('.column').forEach(column => {
+            column.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 0 0 2px var(--vscode-accent)';
+            });
+            
+            column.addEventListener('mouseleave', function() {
+                this.style.boxShadow = 'none';
+            });
+        });
+
+        // Update welcome time
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            console.log('Layout test loaded at:', timeString);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+    "name": "bing-sse",
+    "description": "A tool that enables AI assistants to fetch real-time web information using the Bing search engine.",
+    "transport": "sse",
+    "url": "https://mcp.api-inference.modelscope.net/09b99a41f33148/sse",
+    "headers": {
+        "Authorization": "Bearer ms-073effb5-fea2-4124-bd74-64342b755435",
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream"
+    }
+}

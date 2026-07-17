@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fix</title>
+    <style>
+        .hidden { display: none; }
+        .traeai-view { display: block; }
+        .message-input { width: 300px; height: 40px; }
+        .send-btn { padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="traeai-view">
+        <div class="chat-messages">
+            <div class="message assistant-message">
+                <div class="message-content">Test: Send button should work</div>
+            </div>
+        </div>
+        <div class="input-area">
+            <textarea class="message-input" rows="1" placeholder="Type a message..." onkeydown="handleKeyPress(event)"></textarea>
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    
+    <script>
+        function sendMessage() {
+            console.log('sendMessage called');
+            const input = document.querySelector('.traeai-view .message-input');
+            if (!input) {
+                console.error('No input found');
+                return;
+            }
+            
+            const text = input.value.trim();
+            if (!text) {
+                console.log('No text to send');
+                return;
+            }
+            
+            console.log('Sending message:', text);
+            
+            const messages = document.querySelector('.traeai-view .chat-messages');
+            if (!messages) {
+                console.error('No messages container found');
+                return;
+            }
+            
+            const msg = document.createElement('div');
+            msg.className = 'message user-message';
+            msg.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+            messages.appendChild(msg);
+            
+            input.value = '';
+            console.log('Message added to UI');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function handleKeyPress(event) {
+            console.log('Key pressed:', event.key, 'Ctrl:', event.ctrlKey);
+            if (event.ctrlKey && event.key === 'Enter') {
+                event.preventDefault();
+                console.log('Ctrl+Enter detected, calling sendMessage');
+                sendMessage();
+            }
+        }
+        
+        console.log('Test page loaded');
+    </script>
+</body>
+</html>

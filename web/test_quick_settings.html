@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Settings Bar Test</title>
+    <style>
+        :root {
+            --vscode-accent: #27ae60;
+            --vscode-accent-hover: #219653;
+            --vscode-background: #1e1e1e;
+            --vscode-text: #cccccc;
+            --vscode-text-secondary: #858585;
+            --vscode-border: #3e3e42;
+            --vscode-tab: #2d2d30;
+            --vscode-sidebar: #252526;
+        }
+        
+        body {
+            background: var(--vscode-background);
+            color: var(--vscode-text);
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid var(--vscode-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .traeai-view {
+            display: block;
+        }
+        
+        .chat-messages {
+            height: 300px;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--vscode-background);
+        }
+        
+        .input-area {
+            padding: 12px;
+            border-top: 1px solid var(--vscode-border);
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            background: var(--vscode-sidebar);
+        }
+        
+        .message-input {
+            flex: 1;
+            min-height: 40px;
+            max-height: 120px;
+            padding: 10px 12px;
+            background: var(--vscode-background);
+            border: 1px solid var(--vscode-border);
+            border-radius: 6px;
+            color: var(--vscode-text);
+            font-size: 13px;
+            resize: none;
+            outline: none;
+        }
+        
+        .send-btn {
+            height: 40px;
+            width: 40px;
+            background: var(--vscode-accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .send-btn:hover {
+            background: var(--vscode-accent-hover);
+        }
+        
+        /* Quick Settings Bar Styles */
+        .quick-settings-bar {
+            display: flex;
+            background: var(--vscode-tab);
+            border-top: 1px solid var(--vscode-border);
+            padding: 8px 12px;
+            gap: 20px;
+            font-size: 12px;
+        }
+        
+        .settings-item {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .settings-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--vscode-text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        
+        .settings-label:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--vscode-text);
+        }
+        
+        .settings-value {
+            color: var(--vscode-accent);
+            font-weight: 500;
+            margin-left: 4px;
+        }
+        
+        .dropdown-arrow {
+            font-size: 10px;
+            margin-left: 4px;
+            transition: transform 0.2s;
+        }
+        
+        .settings-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--vscode-sidebar);
+            border: 1px solid var(--vscode-border);
+            border-radius: 6px;
+            min-width: 120px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-top: 4px;
+        }
+        
+        .dropdown-item {
+            padding: 8px 12px;
+            color: var(--vscode-text);
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--vscode-border);
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dropdown-item:hover {
+            background: var(--vscode-accent);
+            color: white;
+        }
+        
+        .settings-item.active .settings-dropdown {
+            display: block;
+        }
+        
+        .settings-item.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        
+        .settings-item.active .settings-label {
+            color: var(--vscode-text);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .log-output {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--vscode-tab);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-line {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid var(--vscode-border);
+        }
+        
+        .log-line:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Quick Settings Bar Test</h1>
+    
+    <div class="test-container">
+        <!-- Trae AI View -->
+        <div class="traeai-view">
+            <div class="chat-messages">
+                <div class="message assistant-message">
+                    <div class="message-content">
+                        <strong>Quick Settings Bar Test</strong><br><br>
+                        This is a test of the new quick settings bar below the input area.<br>
+                        Try clicking on each setting to see the dropdown menu.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="input-area">
+                <textarea class="message-input" rows="1" placeholder="Type a message..."></textarea>
+                <button class="send-btn">✈️</button>
+            </div>
+            
+            <!-- Quick Settings Bar -->
+            <div class="quick-settings-bar">
+                <div class="settings-item">
+                    <span class="settings-label" onclick="toggleSettingsDropdown('mode')">
+                        <i class="fas fa-cog">⚙️</i> 模式
+                        <span class="settings-value" id="mode-value">build</span>
+                        <i class="dropdown-arrow">▼</i>
+                    </span>
+                    <div class="settings-dropdown" id="mode-dropdown">
+                        <div class="dropdown-item" onclick="selectMode('build')">build</div>
+                        <div class="dropdown-item" onclick="selectMode('plan')">plan</div>
+                    </div>
+                </div>
+                
+                <div class="settings-item">
+                    <span class="settings-label" onclick="toggleSettingsDropdown('model')">
+                        <i class="fas fa-brain">🧠</i> 大模型
+                        <span class="settings-value" id="model-value">deepseek</span>
+                        <i class="dropdown-arrow">▼</i>
+                    </span>
+                    <div class="settings-dropdown" id="model-dropdown">
+                        <div class="dropdown-item" onclick="selectModel('deepseek')">deepseek</div>
+                        <div class="dropdown-item" onclick="selectModel('智谱')">智谱</div>
+                    </div>
+                </div>
+                
+                <div class="settings-item">
+                    <span class="settings-label" onclick="toggleSettingsDropdown('command')">
+                        <i class="fas fa-terminal">💻</i> 命令
+                        <span class="settings-value" id="command-value">!connect</span>
+                        <i class="dropdown-arrow">▼</i>
+                    </span>
+                    <div class="settings-dropdown" id="command-dropdown">
+                        <div class="dropdown-item" onclick="selectCommand('!connect')">!connect</div>
+                        <div class="dropdown-item" onclick="selectCommand('!session')">!session</div>
+                    </div>
+                </div>
+                
+                <div class="settings-item">
+                    <span class="settings-label" onclick="toggleSettingsDropdown('reference')">
+                        <i class="fas fa-link">🔗</i> 引用
+                        <span class="settings-value" id="reference-value">@web</span>
+                        <i class="dropdown-arrow">▼</i>
+                    </span>
+                    <div class="settings-dropdown" id="reference-dropdown">
+                        <div class="dropdown-item" onclick="selectReference('@web')">@web</div>
+                        <div class="dropdown-item" onclick="selectReference('@file')">@file</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="log-output" id="log-output">
+        <div class="log-line">Log output will appear here...</div>
+    </div>
+    
+    <script>
+        let activeDropdown = null;
+        let logCount = 0;
+        
+        function toggleSettingsDropdown(type) {
+            const dropdown = document.getElementById(`${type}-dropdown`);
+            const item = dropdown.closest('.settings-item');
+            
+            // Close other dropdowns
+            if (activeDropdown && activeDropdown !== dropdown) {
+                const activeItem = activeDropdown.closest('.settings-item');
+                activeItem.classList.remove('active');
+            }
+            
+            // Toggle current dropdown
+            item.classList.toggle('active');
+            
+            if (item.classList.contains('active')) {
+                activeDropdown = dropdown;
+                log(`Opened ${type} dropdown`);
+                
+                // Close dropdown when clicking outside
+                setTimeout(() => {
+                    const closeHandler = (e) => {
+                        if (!item.contains(e.target)) {
+                            item.classList.remove('active');
+                            activeDropdown = null;
+                            document.removeEventListener('click', closeHandler);
+                            log(`Closed ${type} dropdown`);
+                        }
+                    };
+                    document.addEventListener('click', closeHandler);
+                }, 0);
+            } else {
+                activeDropdown = null;
+                log(`Closed ${type} dropdown`);
+            }
+        }
+        
+        function selectMode(mode) {
+            document.getElementById('mode-value').textContent = mode;
+            log(`Mode selected: ${mode}`);
+        }
+        
+        function selectModel(model) {
+            document.getElementById('model-value').textContent = model;
+            log(`Model selected: ${model}`);
+        }
+        
+        function selectCommand(command) {
+            document.getElementById('command-value').textContent = command;
+            log(`Command selected: ${command}`);
+        }
+        
+        function selectReference(reference) {
+            document.getElementById('reference-value').textContent = reference;
+            log(`Reference selected: ${reference}`);
+        }
+        
+        function log(message) {
+            const logOutput = document.getElementById('log-output');
+            const logLine = document.createElement('div');
+            logLine.className = 'log-line';
+            logLine.textContent = `[${++logCount}] ${new Date().toLocaleTimeString()}: ${message}`;
+            
+            logOutput.appendChild(logLine);
+            logOutput.scrollTop = logOutput.scrollHeight;
+            
+            // Keep only last 10 logs
+            const logs = logOutput.querySelectorAll('.log-line');
+            if (logs.length > 10) {
+                logs[0].remove();
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            selectMode('build');
+            selectModel('deepseek');
+            selectCommand('!connect');
+            selectReference('@web');
+            log('Quick settings bar initialized');
+        });
+        
+        // Test send button
+        document.querySelector('.send-btn').addEventListener('click', function() {
+            const input = document.querySelector('.message-input');
+            const text = input.value.trim();
+            if (text) {
+                const messages = document.querySelector('.chat-messages');
+                const msg = document.createElement('div');
+                msg.className = 'message user-message';
+                msg.innerHTML = `<div class="message-content">${text}</div>`;
+                messages.appendChild(msg);
+                input.value = '';
+                log(`Message sent: "${text}"`);
+            }
+        });
+    </script>
+</body>
+</html>

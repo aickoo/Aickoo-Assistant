@@ -1,0 +1,1 @@
+start chrome-win64\chrome.exe --remote-debugging-port=9222 --remote-allow-origins=* --no-sandbox --disable-dev-shm-usage --user-data-dir=".\workspace\ChromeDebugTemp"

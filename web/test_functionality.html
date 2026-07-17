@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trae - Functionality Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #252526;
+            border-radius: 4px;
+            border: 1px solid #3e3e42;
+        }
+        
+        .test-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #cccccc;
+        }
+        
+        .test-button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .test-button:hover {
+            background: #0e639c;
+        }
+        
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .success {
+            color: #4ec9b0;
+        }
+        
+        .error {
+            color: #f48771;
+        }
+        
+        .info {
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Trae AI Assistant - Functionality Test</h1>
+        
+        <div class="test-section">
+            <div class="test-title">1. JavaScript Core Functions Test</div>
+            <button class="test-button" onclick="testCoreFunctions()">Test Core Functions</button>
+            <div id="core-test-result" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">2. File Operations Test (Mock)</div>
+            <button class="test-button" onclick="testFileOperations()">Test File Operations</button>
+            <div id="file-test-result" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">3. Console Functions Test</div>
+            <button class="test-button" onclick="testConsoleFunctions()">Test Console Functions</button>
+            <div id="console-test-result" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">4. UI Components Test</div>
+            <button class="test-button" onclick="testUIComponents()">Test UI Components</button>
+            <div id="ui-test-result" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">5. Eel Integration Test</div>
+            <button class="test-button" onclick="testEelIntegration()">Test Eel Integration</button>
+            <div id="eel-test-result" class="test-result"></div>
+        </div>
+    </div>
+    
+    <script src="main.js"></script>
+    <script>
+        let testResults = {};
+        
+        function logResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            
+            if (type === 'success') {
+                element.innerHTML += `<span class="success">${logEntry}</span>`;
+            } else if (type === 'error') {
+                element.innerHTML += `<span class="error">${logEntry}</span>`;
+            } else {
+                element.innerHTML += `<span class="info">${logEntry}</span>`;
+            }
+            
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function clearResult(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+        
+        function testCoreFunctions() {
+            const resultId = 'core-test-result';
+            clearResult(resultId);
+            
+            logResult(resultId, 'Testing core JavaScript functions...', 'info');
+            
+            // Test escapeHtml function
+            try {
+                const testHtml = '<script>alert("xss")</script>';
+                const escaped = escapeHtml(testHtml);
+                if (escaped === '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;') {
+                    logResult(resultId, '✓ escapeHtml function works correctly', 'success');
+                } else {
+                    logResult(resultId, '✗ escapeHtml function failed', 'error');
+                }
+            } catch (e) {
+                logResult(resultId, `✗ escapeHtml error: ${e.message}`, 'error');
+            }
+            
+            // Test formatTime function
+            try {
+                const time = formatTime('2024-01-01T12:00:00');
+                if (time && typeof time === 'string') {
+                    logResult(resultId, '✓ formatTime function works', 'success');
+                } else {
+                    logResult(resultId, '✗ formatTime function failed', 'error');
+                }
+            } catch (e) {
+                logResult(resultId, `✗ formatTime error: ${e.message}`, 'error');
+            }
+            
+            // Test getFileIcon function
+            try {
+                const pyIcon = getFileIcon('test.py');
+                const jsIcon = getFileIcon('test.js');
+                const txtIcon = getFileIcon('test.txt');
+                const unknownIcon = getFileIcon('test.xyz');
+                
+                if (pyIcon === 'fa-file-code' && jsIcon === 'fa-file-code' && 
+                    txtIcon === 'fa-file-alt' && unknownIcon === 'fa-file') {
+                    logResult(resultId, '✓ getFileIcon function works correctly', 'success');
+                } else {
+                    logResult(resultId, '✗ getFileIcon function failed', 'error');
+                }
+            } catch (e) {
+                logResult(resultId, `✗ getFileIcon error: ${e.message}`, 'error');
+            }
+            
+            logResult(resultId, 'Core functions test completed.', 'info');
+        }
+        
+        function testFileOperations() {
+            const resultId = 'file-test-result';
+            clearResult(resultId);
+            
+            logResult(resultId, 'Testing file operations (mock)...', 'info');
+            
+            // Test if file operation functions exist
+            const functionsToTest = [
+                'refreshFileExplorer',
+                'openFileInEditor',
+                'saveCurrentFile',
+                'createNewFile',
+                'createNewFolder'
+            ];
+            
+            let allExist = true;
+            functionsToTest.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    logResult(resultId, `✓ ${funcName} function exists`, 'success');
+                } else {
+                    logResult(resultId, `✗ ${funcName} function missing`, 'error');
+                    allExist = false;
+                }
+            });
+            
+            if (allExist) {
+                logResult(resultId, 'All file operation functions exist.', 'success');
+            } else {
+                logResult(resultId, 'Some file operation functions are missing.', 'error');
+            }
+            
+            // Test mock file operations
+            try {
+                // Mock the eel object for testing
+                if (typeof eel === 'undefined') {
+                    window.eel = {
+                        list_files: function(path) {
+                            return function(callback) {
+                                setTimeout(() => {
+                                    callback([
+                                        { name: 'test.py', path: '/test.py', is_dir: false, size: 1024 },
+                                        { name: 'src', path: '/src', is_dir: true, size: 0 }
+                                    ]);
+                                }, 100);
+                            };
+                        },
+                        get_current_directory: function() {
+                            return function(callback) {
+                                callback('/test');
+                            };
+                        }
+                    };
+                    logResult(resultId, 'Created mock eel object for testing', 'info');
+                }
+                
+                logResult(resultId, 'File operations test completed.', 'info');
+            } catch (e) {
+                logResult(resultId, `✗ File operations test error: ${e.message}`, 'error');
+            }
+        }
+        
+        function testConsoleFunctions() {
+            const resultId = 'console-test-result';
+            clearResult(resultId);
+            
+            logResult(resultId, 'Testing console functions...', 'info');
+            
+            // Test console functions
+            const functionsToTest = [
+                'appendToConsole',
+                'clearConsole',
+                'processConsoleCommand',
+                'switchBottomPanel'
+            ];
+            
+            let allExist = true;
+            functionsToTest.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    logResult(resultId, `✓ ${funcName} function exists`, 'success');
+                } else {
+                    logResult(resultId, `✗ ${funcName} function missing`, 'error');
+                    allExist = false;
+                }
+            });
+            
+            // Test appendToConsole
+            try {
+                // Create a mock console output element
+                const mockElement = document.createElement('div');
+                mockElement.id = 'mock-console-output';
+                document.body.appendChild(mockElement);
+                
+                // Temporarily replace the real function
+                const originalAppend = window.appendToConsole;
+                let testPassed = false;
+                
+                window.appendToConsole = function(text, type) {
+                    testPassed = true;
+                    logResult(resultId, `✓ appendToConsole called with: "${text.substring(0, 50)}..."`, 'success');
+                };
+                
+                // Call the function
+                processConsoleCommand('echo test message');
+                
+                // Restore original function
+                window.appendToConsole = originalAppend;
+                mockElement.remove();
+                
+                if (testPassed) {
+                    logResult(resultId, 'Console command processing works', 'success');
+                }
+                
+            } catch (e) {
+                logResult(resultId, `✗ Console test error: ${e.message}`, 'error');
+            }
+            
+            logResult(resultId, 'Console functions test completed.', 'info');
+        }
+        
+        function testUIComponents() {
+            const resultId = 'ui-test-result';
+            clearResult(resultId);
+            
+            logResult(resultId, 'Testing UI component functions...', 'info');
+            
+            // Test UI functions
+            const functionsToTest = [
+                'showNotification',
+                'autoResize',
+                'updateLineNumbers'
+            ];
+            
+            let allExist = true;
+            functionsToTest.forEach(funcName => {
+                if (typeof window[funcName] === 'function') {
+                    logResult(resultId, `✓ ${funcName} function exists`, 'success');
+                } else {
+                    logResult(resultId, `✗ ${funcName} function missing`, 'error');
+                    allExist = false;
+                }
+            });
+            
+            // Test showNotification
+            try {
+                showNotification('Test', 'This is a test notification', 'info');
+                logResult(resultId, '✓ showNotification function works', 'success');
+            } catch (e) {
+                logResult(resultId, `✗ showNotification error: ${e.message}`, 'error');
+            }
+            
+            // Test autoResize
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = 'test\nlines\nhere';
+                autoResize(textarea);
+                logResult(resultId, '✓ autoResize function works', 'success');
+            } catch (e) {
+                logResult(resultId, `✗ autoResize error: ${e.message}`, 'error');
+            }
+            
+            logResult(resultId, 'UI components test completed.', 'info');
+        }
+        
+        function testEelIntegration() {
+            const resultId = 'eel-test-result';
+            clearResult(resultId);
+            
+            logResult(resultId, 'Testing Eel integration...', 'info');
+            
+            // Check if eel is available
+            if (typeof eel !== 'undefined') {
+                logResult(resultId, '✓ Eel is available', 'success');
+                
+                // Check for exposed functions
+                const eelFunctions = [
+                    'get_sessions',
+                    'create_session',
+                    'send_message',
+                    'list_files',
+                    'read_file',
+                    'write_file'
+                ];
+                
+                eelFunctions.forEach(funcName => {
+                    if (typeof eel[funcName] === 'function') {
+                        logResult(resultId, `✓ Eel function ${funcName} exists`, 'success');
+                    } else {
+                        logResult(resultId, `✗ Eel function ${funcName} missing`, 'error');
+                    }
+                });
+                
+            } else {
+                logResult(resultId, 'Eel is not available (running in test mode)', 'info');
+                
+                // Create mock eel functions for testing
+                window.eel = {
+                    get_sessions: function() {
+                        return function(callback) {
+                            setTimeout(() => {
+                                callback([
+                                    { id: 'test1', title: 'Test Session', created_at: new Date().toISOString() }
+                                ]);
+                            }, 100);
+                        };
+                    },
+                    ping: function() {
+                        return function(callback) {
+                            callback('pong');
+                        };
+                    }
+                };
+                
+                logResult(resultId, 'Created mock Eel object for testing', 'info');
+                
+                // Test mock ping
+                eel.ping()(function(response) {
+                    if (response === 'pong') {
+                        logResult(resultId, '✓ Mock Eel ping works', 'success');
+                    }
+                });
+            }
+            
+            logResult(resultId, 'Eel integration test completed.', 'info');
+        }
+        
+        // Initialize tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            logResult('core-test-result', 'Ready to run tests. Click the buttons above.', 'info');
+        });
+    </script>
+</body>
+</html>
