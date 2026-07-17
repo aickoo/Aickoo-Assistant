@@ -1,7 +1,0 @@
-.aickoo/
-.idea/
-.pytest_cache/
-.vscode/
-__pycache__/
-python310/
-chrome-win64/
