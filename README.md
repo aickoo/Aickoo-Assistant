@@ -139,6 +139,13 @@
 | 磁盘空间 | 至少 500MB（含内置 Chrome 和 Python） |
 | 网络 | 需要访问 LLM API（本地模型或云服务） |
 
+[运行环境的百度云下载](https://pan.baidu.com/s/1VL0Yg86gzfLIQtyirUdHWA?pwd=pqyg)
+链接: https://pan.baidu.com/s/1VL0Yg86gzfLIQtyirUdHWA?pwd=pqyg 提取码: pqyg
+
+下载好以后拷贝到程序目录，存放后路径如下：  
+Aickoo-Assistant \\ python310  
+Aickoo-Assistant \\ chrome-win64  
+
 ---
 
 ## 2. 启动方式
