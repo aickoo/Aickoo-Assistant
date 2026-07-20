@@ -138,8 +138,9 @@
 | 内存 | 建议 8GB 及以上 |
 | 磁盘空间 | 至少 500MB（含内置 Chrome 和 Python） |
 | 网络 | 需要访问 LLM API（本地模型或云服务） |
-
-
+  
+  
+  
 百度网盘一键部署方式，下载解压缩即可用，免去繁琐部署： 
 通过网盘分享的文件：Aickoo-Assistant.zip 
 链接: https://pan.baidu.com/s/19r-IaUzbYBiUER8BNxIhvw?pwd=ij8n 提取码: ij8n 
@@ -147,8 +148,8 @@
 ![DeepSeek APi Key 配置](./deepseek-key.png) 
   
   
+  
 如果要自行配置环境，除了下载本项目源码，还需下载环境，链接如下： 
- 
 [运行环境的百度云下载](https://pan.baidu.com/s/1VL0Yg86gzfLIQtyirUdHWA?pwd=pqyg)
 链接: https://pan.baidu.com/s/1VL0Yg86gzfLIQtyirUdHWA?pwd=pqyg 提取码: pqyg
 
